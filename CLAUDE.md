@@ -6,7 +6,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Estado del repositorio
 
-Repo pre-implementación. Único artefacto actual: `habit-tracker-design-spec.md` — spec de diseño cerrada (MVP) del proyecto. No hay código todavía, ni `package.json`, ni build/lint/test configurados. Al iniciar implementación, seguir la estructura de carpetas y stack definidos en la spec (secciones 5.1 y 5.2) y actualizar este archivo con comandos reales (`expo start`, `eas build`, test runner, etc.) una vez existan.
+Fase 0 (Cimientos) completada: proyecto Expo (SDK 57, TypeScript, React 19.2.7) + Expo Router + estructura de carpetas + Legend-State v3 con persistencia local SQLite + scaffold local de Supabase (CLI init + migración inicial) + tokens de diseño básicos. Sin lógica de negocio real todavía (Fase 1+). No hay test runner configurado aún — se añade cuando `domain/` tenga su primera función real que testear.
+
+### Comandos
+
+```bash
+npm run start          # expo start (Metro + QR para Expo Go)
+npm run android         # expo start --android
+npm run ios              # expo start --ios (requiere dev build, no funciona en Expo Go para iOS con este stack)
+npx tsc --noEmit         # typecheck
+npx expo-doctor          # valida versiones de paquetes contra el SDK instalado
+npx expo export --platform android   # smoke test de bundling sin dispositivo/emulador
+```
+
+### Pendiente manual del usuario (no automatizable desde este entorno)
+
+- Crear proyecto real en supabase.com, luego `npx supabase login` + `npx supabase link --project-ref <ref>` + `npx supabase db push` para aplicar `supabase/migrations/0001_init.sql`.
+- Copiar `.env.example` → `.env` con `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` reales cuando se conecte Supabase (Fase 4).
+
+### Nota de dependencias
+
+`react` está fijado a `19.2.7` (no `19.2.3`, la versión "esperada" por el SDK) porque las dependencias web de `expo-router` (`@expo/ui`, `vaul`, Radix) requieren `react-dom@^19.2.7` como peer; 19.2.3 no la satisface. Está excluido de `expo install --check` vía `expo.install.exclude` en `package.json` para que no se revierta solo. `@legendapp/state@beta` también requiere `--legacy-peer-deps` al instalar (su peer opcional `expo-sqlite@^15.0.0` usa el esquema de versionado antiguo de Expo, previo al alineado por SDK; el paquete real instalado es `expo-sqlite@~57.0.1` y funciona bien).
 
 ## Producto
 
@@ -90,4 +110,4 @@ Backend Supabase: Postgres con Row-Level Security (`user_id = auth.uid()`), tabl
 
 ## Roadmap de fases (orden acordado, no reordenar sin razón)
 
-Fase 0 Cimientos → Fase 1 App local usable (CRUD hábitos, Hoy, marcar/deshacer, sin nube) → Fase 2 Rachas y progreso básico → Fase 3 Notificaciones → Fase 4 Nube (auth + sync, fase aislada) → Fase 5 Gráficas (al final, requieren historial acumulado). Ver spec §7 para el detalle de cada hito.
+**Fase 0 Cimientos — completada.** → Fase 1 App local usable (CRUD hábitos, Hoy, marcar/deshacer, sin nube) → Fase 2 Rachas y progreso básico → Fase 3 Notificaciones → Fase 4 Nube (auth + sync, fase aislada) → Fase 5 Gráficas (al final, requieren historial acumulado). Ver spec §7 para el detalle de cada hito.
