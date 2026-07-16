@@ -19,6 +19,17 @@ npx expo-doctor          # valida versiones de paquetes contra el SDK instalado
 npx expo export --platform android   # smoke test de bundling sin dispositivo/emulador
 ```
 
+### Generar el APK (`CotidieApp-preview.apk`)
+
+Cuando el usuario pida "actualizar/generar el APK", compilar **local con Android SDK vía Gradle** — no usar `eas build` (cloud): es más lento (cola de build remota) y gasta créditos de EAS. El proyecto ya tiene carpeta nativa `android/` (prebuild generado). No hay `java` en el PATH del sistema; usar el JBR que trae Android Studio como `JAVA_HOME`.
+
+```bash
+cd android && JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleRelease
+cp android/app/build/outputs/apk/release/app-release.apk ../CotidieApp-preview.apk
+```
+
+`eas.json`/`eas build` quedan solo para builds de development client (iOS, que si requiere Mac/EAS) o cuando se pida explícitamente un build cloud.
+
 ### Pendiente manual del usuario (no automatizable desde este entorno)
 
 - Crear proyecto real en supabase.com, luego `npx supabase login` + `npx supabase link --project-ref <ref>` + `npx supabase db push` para aplicar `supabase/migrations/0001_init.sql`.

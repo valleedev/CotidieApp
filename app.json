@@ -11,6 +11,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "app.cotidie.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -27,6 +28,13 @@
       "expo-status-bar",
       "expo-sqlite",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f8370045-1af0-4108-925a-1ed5f94d2844"
+      }
+    },
+    "owner": "jvalleb"
   }
 }
