@@ -24,11 +24,13 @@ npx expo export --platform android   # smoke test de bundling sin dispositivo/em
 Cuando el usuario pida "actualizar/generar el APK", compilar **local con Android SDK vía Gradle** — no usar `eas build` (cloud): es más lento (cola de build remota) y gasta créditos de EAS. El proyecto ya tiene carpeta nativa `android/` (prebuild generado). No hay `java` en el PATH del sistema; usar el JBR que trae Android Studio como `JAVA_HOME`.
 
 ```bash
-cd android && JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleRelease
+cd android && JAVA_HOME=/opt/android-studio/jbr ./gradlew assembleRelease -PreactNativeArchitectures=arm64-v8a
 cp android/app/build/outputs/apk/release/app-release.apk ../CotidieApp-preview.apk
 ```
 
-`eas.json`/`eas build` quedan solo para builds de development client (iOS, que si requiere Mac/EAS) o cuando se pida explícitamente un build cloud.
+`-PreactNativeArchitectures=arm64-v8a` limita los `.so` nativos a una sola arquitectura (la de cualquier Android real desde ~2017) en vez de las 4 por defecto (arm64-v8a + armeabi-v7a + x86 + x86_64 — las dos últimas solo sirven para emulador). Sin el flag el APK pesa ~100MB; con el flag, ~44MB. Si algún día se necesita probar en un Android de 32 bits viejo, usar `armeabi-v7a` en su lugar (o ambos separados por coma para un build universal).
+
+`eas.json`/`eas build` quedan solo para builds de development client (iOS, que sí requiere Mac/EAS) o cuando se pida explícitamente un build cloud.
 
 ### Pendiente manual del usuario (no automatizable desde este entorno)
 
