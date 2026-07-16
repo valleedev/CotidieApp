@@ -21,6 +21,38 @@ export const colors = {
   },
 } as const;
 
+export const HABIT_COLORS = [
+  '#EF4444',
+  '#F97316',
+  '#EAB308',
+  '#22C55E',
+  '#14B8A6',
+  '#3B82F6',
+  '#6366F1',
+  '#A855F7',
+  '#EC4899',
+  '#6B7280',
+] as const;
+
+export const HABIT_ICONS = [
+  'water',
+  'walk',
+  'book',
+  'barbell',
+  'bicycle',
+  'flame',
+  'heart',
+  'leaf',
+  'moon',
+  'musical-notes',
+  'nutrition',
+  'pencil',
+  'sunny',
+  'time',
+  'checkmark-circle',
+  'star',
+] as const;
+
 export const spacing = {
   xs: 4,
   sm: 8,

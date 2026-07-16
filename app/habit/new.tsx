@@ -1,9 +1,15 @@
-import { Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { HabitForm } from '../../src/components/HabitForm';
+import { createHabit } from '../../src/state/habits$';
 
 export default function NewHabit() {
   return (
-    <View>
-      <Text>Crear hábito</Text>
-    </View>
+    <HabitForm
+      submitLabel="Crear"
+      onSubmit={(values) => {
+        createHabit(values);
+        router.back();
+      }}
+    />
   );
 }
