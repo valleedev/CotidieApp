@@ -5,7 +5,10 @@ import { spacing, radii, typography, HABIT_COLORS } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { WeekdayPicker } from './WeekdayPicker';
 import { IconPicker } from './IconPicker';
-import type { Habit, Weekday } from '../domain/types';
+import { ReminderRow } from './ReminderRow';
+import type { Habit, Reminder, Weekday } from '../domain/types';
+import type { ReminderDraft } from '../domain/reminders';
+import { refreshPermissionStatusAsync, requestPermissionAsync } from '../notifications/permissions';
 
 export interface HabitFormValues {
   name: string;
@@ -17,17 +20,25 @@ export interface HabitFormValues {
 
 export interface HabitFormProps {
   initial?: Habit;
+  initialReminders?: Reminder[];
   submitLabel: string;
-  onSubmit: (values: HabitFormValues) => void;
+  onSubmit: (values: HabitFormValues, reminderDrafts: ReminderDraft[]) => void;
 }
 
-export function HabitForm({ initial, submitLabel, onSubmit }: HabitFormProps) {
+function reminderToDraft(reminder: Reminder): ReminderDraft {
+  return { id: reminder.id, time: reminder.time, daysOfWeek: reminder.daysOfWeek, enabled: reminder.enabled };
+}
+
+export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmit }: HabitFormProps) {
   const colors = useThemeColors();
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState(initial?.color ?? HABIT_COLORS[0]);
   const [icon, setIcon] = useState(initial?.icon ?? 'checkmark-circle');
   const [daysOfWeek, setDaysOfWeek] = useState<Weekday[]>(initial?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6]);
   const [targetPerDay, setTargetPerDay] = useState(initial?.targetPerDay ?? 1);
+  const [reminderDrafts, setReminderDrafts] = useState<ReminderDraft[]>(
+    initialReminders.map(reminderToDraft)
+  );
 
   const nameError = name.trim().length === 0;
   const daysError = daysOfWeek.length === 0;
@@ -35,7 +46,23 @@ export function HabitForm({ initial, submitLabel, onSubmit }: HabitFormProps) {
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onSubmit({ name: name.trim(), color, icon, daysOfWeek, targetPerDay });
+    onSubmit({ name: name.trim(), color, icon, daysOfWeek, targetPerDay }, reminderDrafts);
+  }
+
+  async function handleAddReminder() {
+    const status = await refreshPermissionStatusAsync();
+    if (status === 'undetermined') {
+      await requestPermissionAsync();
+    }
+    setReminderDrafts((drafts) => [...drafts, { time: '08:00', daysOfWeek: null, enabled: true }]);
+  }
+
+  function updateReminderDraft(index: number, next: ReminderDraft) {
+    setReminderDrafts((drafts) => drafts.map((d, i) => (i === index ? next : d)));
+  }
+
+  function removeReminderDraft(index: number) {
+    setReminderDrafts((drafts) => drafts.filter((_, i) => i !== index));
   }
 
   return (
@@ -105,6 +132,23 @@ export function HabitForm({ initial, submitLabel, onSubmit }: HabitFormProps) {
         </View>
       </View>
 
+      <View style={styles.field}>
+        <Text style={[typography.caption, { color: colors.textMuted }]}>Recordatorios</Text>
+        {reminderDrafts.map((draft, index) => (
+          <ReminderRow
+            key={draft.id ?? `new-${index}`}
+            value={draft}
+            habitDaysOfWeek={daysOfWeek}
+            onChange={(next) => updateReminderDraft(index, next)}
+            onRemove={() => removeReminderDraft(index)}
+          />
+        ))}
+        <Pressable onPress={handleAddReminder} style={styles.addReminderButton}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+          <Text style={[typography.body, { color: colors.primary }]}>Añadir recordatorio</Text>
+        </Pressable>
+      </View>
+
       <Pressable
         onPress={handleSubmit}
         disabled={!canSubmit}
@@ -164,5 +208,12 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: radii.md,
     alignItems: 'center',
+  },
+  addReminderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xs,
   },
 });

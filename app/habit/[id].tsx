@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { HabitForm } from '../../src/components/HabitForm';
 import { MiniCalendar } from '../../src/components/MiniCalendar';
 import { updateHabit, softDeleteHabit } from '../../src/state/habits$';
+import { reminders$, createReminder, updateReminder, softDeleteReminder } from '../../src/state/reminders$';
+import { diffReminderDrafts } from '../../src/domain/reminders';
 import { useHabitDetail } from '../../src/hooks/useHabitDetail';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, radii, typography } from '../../src/theme/tokens';
@@ -25,6 +27,9 @@ export default function HabitDetail() {
   }
 
   const { habit, currentStreak, bestStreak, completedDates } = detail;
+  const existingReminders = Object.values(reminders$.get()).filter(
+    (r) => r.habitId === id && r.deletedAt === null
+  );
 
   function handleDelete() {
     Alert.alert('Eliminar hábito', `¿Seguro que quieres eliminar "${habit.name}"?`, [
@@ -65,9 +70,18 @@ export default function HabitDetail() {
       </View>
       <HabitForm
         initial={habit}
+        initialReminders={existingReminders}
         submitLabel="Guardar"
-        onSubmit={(values) => {
+        onSubmit={(values, reminderDrafts) => {
           updateHabit(id, values);
+          const { toCreate, toUpdate, toDeleteIds } = diffReminderDrafts(
+            id,
+            existingReminders,
+            reminderDrafts
+          );
+          toCreate.forEach(createReminder);
+          toUpdate.forEach(({ id: reminderId, patch }) => updateReminder(reminderId, patch));
+          toDeleteIds.forEach(softDeleteReminder);
           router.back();
         }}
       />

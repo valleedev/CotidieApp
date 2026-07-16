@@ -6,6 +6,7 @@ import type { Habit, ID, Weekday } from '../domain/types';
 import { newId } from '../lib/uuid';
 import { nowIso } from '../lib/dates';
 import { LOCAL_USER_ID } from '../lib/localUser';
+import { reminders$, softDeleteReminder } from './reminders$';
 
 export type { Habit };
 
@@ -56,6 +57,10 @@ export function updateHabit(
 
 export function softDeleteHabit(id: ID): void {
   habits$[id].assign({ deletedAt: nowIso(), updatedAt: nowIso() });
+  // Cascada: evita reminders activos huérfanos apuntando a un hábito borrado.
+  Object.values(reminders$.get())
+    .filter((r) => r.habitId === id && r.deletedAt === null)
+    .forEach((r) => softDeleteReminder(r.id));
 }
 
 // Reasigna sortOrder secuencial tras un drag-reorder.

@@ -1,10 +1,11 @@
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useProgress } from '../../src/hooks/useProgress';
 import { ProgressRow } from '../../src/components/ProgressRow';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useThemeColors } from '../../src/theme/useThemeColors';
-import { spacing } from '../../src/theme/tokens';
+import { spacing, typography } from '../../src/theme/tokens';
 
 export default function Progress() {
   const entries = useProgress();
@@ -12,22 +13,25 @@ export default function Progress() {
 
   if (entries.length === 0) {
     return (
-      <EmptyState
-        title="Aún no tienes hábitos"
-        actionLabel="Crear hábito"
-        onAction={() => router.push('/habit/new')}
-      />
+      <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
+        <EmptyState
+          title="Aún no tienes hábitos"
+          actionLabel="Crear hábito"
+          onAction={() => router.push('/habit/new')}
+        />
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.container}>
+        <Text style={[typography.title, { color: colors.text }]}>Progreso</Text>
         {entries.map((entry) => (
           <ProgressRow key={entry.habit.id} entry={entry} />
         ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

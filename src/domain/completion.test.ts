@@ -1,4 +1,12 @@
-import { countCompletions, isDone, pickCompletionToUndo, progress } from './completion';
+import {
+  completionsForReminder,
+  countCompletedReminders,
+  countCompletions,
+  isDone,
+  isReminderDone,
+  pickCompletionToUndo,
+  progress,
+} from './completion';
 import type { Completion } from './types';
 
 function makeCompletion(overrides: Partial<Completion>): Completion {
@@ -8,6 +16,7 @@ function makeCompletion(overrides: Partial<Completion>): Completion {
     userId: 'u1',
     date: '2026-07-15',
     completedAt: '2026-07-15T10:00:00.000Z',
+    reminderId: null,
     updatedAt: '2026-07-15T10:00:00.000Z',
     deletedAt: null,
     ...overrides,
@@ -82,5 +91,57 @@ describe('pickCompletionToUndo', () => {
       makeCompletion({ id: 'active', completedAt: '2026-07-15T09:00:00.000Z' }),
     ];
     expect(pickCompletionToUndo(completions, 'h1', '2026-07-15')?.id).toBe('active');
+  });
+
+  it('only considers completions from the matching reminderId when one is passed', () => {
+    const completions = [
+      makeCompletion({ id: 'generic', reminderId: null, completedAt: '2026-07-15T09:00:00.000Z' }),
+      makeCompletion({ id: 'r1', reminderId: 'rem-1', completedAt: '2026-07-15T10:00:00.000Z' }),
+      makeCompletion({ id: 'r2', reminderId: 'rem-2', completedAt: '2026-07-15T11:00:00.000Z' }),
+    ];
+    expect(pickCompletionToUndo(completions, 'h1', '2026-07-15', 'rem-1')?.id).toBe('r1');
+    expect(pickCompletionToUndo(completions, 'h1', '2026-07-15')?.id).toBe('generic');
+  });
+
+  it('finds legacy completions missing the reminderId key at all (pre-migration data)', () => {
+    const legacy = makeCompletion({ id: 'legacy' }) as Partial<Completion>;
+    delete legacy.reminderId;
+    const completions = [legacy as Completion];
+    expect(pickCompletionToUndo(completions, 'h1', '2026-07-15')?.id).toBe('legacy');
+  });
+});
+
+describe('completionsForReminder / isReminderDone / countCompletedReminders', () => {
+  it('matches completions tied to a specific reminder', () => {
+    const completions = [
+      makeCompletion({ id: 'r1', reminderId: 'rem-1' }),
+      makeCompletion({ id: 'r2', reminderId: 'rem-2' }),
+      makeCompletion({ id: 'generic', reminderId: null }),
+    ];
+    expect(completionsForReminder(completions, 'h1', '2026-07-15', 'rem-1')).toHaveLength(1);
+    expect(isReminderDone(completions, 'h1', '2026-07-15', 'rem-1')).toBe(true);
+    expect(isReminderDone(completions, 'h1', '2026-07-15', 'rem-3')).toBe(false);
+  });
+
+  it('ignores soft-deleted completions for a reminder', () => {
+    const completions = [
+      makeCompletion({ id: 'r1', reminderId: 'rem-1', deletedAt: '2026-07-15T12:00:00.000Z' }),
+    ];
+    expect(isReminderDone(completions, 'h1', '2026-07-15', 'rem-1')).toBe(false);
+  });
+
+  it('counts how many of the given reminders have a completion', () => {
+    const completions = [
+      makeCompletion({ id: 'r1', reminderId: 'rem-1' }),
+      makeCompletion({ id: 'r2', reminderId: 'rem-2' }),
+    ];
+    expect(countCompletedReminders(completions, 'h1', '2026-07-15', ['rem-1', 'rem-2', 'rem-3'])).toBe(2);
+  });
+
+  it('treats legacy completions without a reminderId key as not matching any reminder', () => {
+    const legacy = makeCompletion({ id: 'legacy' }) as Partial<Completion>;
+    delete legacy.reminderId;
+    const completions = [legacy as Completion];
+    expect(isReminderDone(completions, 'h1', '2026-07-15', 'rem-1')).toBe(false);
   });
 });

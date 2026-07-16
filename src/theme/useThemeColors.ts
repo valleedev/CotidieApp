@@ -1,7 +1,6 @@
-import { useColorScheme } from 'react-native';
 import { colors } from './tokens';
 
+// Dark-only por ahora — ver decisiones confirmadas en el plan de rediseño.
 export function useThemeColors() {
-  const scheme = useColorScheme();
-  return scheme === 'dark' ? colors.dark : colors.light;
+  return colors.dark;
 }

@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   box: {
     width: 28,
     height: 28,
-    borderRadius: radii.sm,
+    borderRadius: radii.full,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',

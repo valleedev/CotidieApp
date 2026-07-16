@@ -1,4 +1,6 @@
 export const colors = {
+  // NOTA: no usado activamente — la app es dark-only por ahora (ver useThemeColors.ts).
+  // Se conserva para un futuro toggle claro/oscuro sin rediseñar desde cero.
   light: {
     background: '#FFFFFF',
     surface: '#F5F5F7',
@@ -10,14 +12,36 @@ export const colors = {
     danger: '#EF4444',
   },
   dark: {
-    background: '#111114',
-    surface: '#1C1C21',
-    text: '#F5F5F7',
-    textMuted: '#9B9BA3',
-    border: '#2C2C33',
-    primary: '#60A5FA',
-    success: '#4ADE80',
+    background: '#0B0F1A',
+    surface: '#141B2E',
+    surfaceElevated: '#1C2540',
+    text: '#F5F7FA',
+    textMuted: '#8A93AC',
+    border: '#232C46',
+    primary: '#4C8DFF',
+    primaryMuted: 'rgba(76, 141, 255, 0.16)',
+    success: '#34D399',
+    successBackground: 'rgba(52, 211, 153, 0.12)',
+    successBorder: 'rgba(52, 211, 153, 0.35)',
+    successPill: '#123326',
     danger: '#F87171',
+  },
+} as const;
+
+export const shadow = {
+  fab: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  card: {
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 6,
+    elevation: 3,
   },
 } as const;
 

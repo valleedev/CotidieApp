@@ -1,4 +1,4 @@
-import { isDaily, isScheduledDay, isScheduledOn, isScheduledToday } from './scheduling';
+import { isDaily, isScheduledDay, isScheduledOn, isScheduledToday, weekOrder } from './scheduling';
 import type { Weekday } from './types';
 
 describe('isScheduledDay', () => {
@@ -39,5 +39,12 @@ describe('isScheduledOn / isScheduledToday', () => {
     const sunday = new Date('2026-07-19T09:00:00');
     expect(isScheduledToday([0], sunday)).toBe(true);
     expect(isScheduledToday([1, 2, 3, 4, 5], sunday)).toBe(false);
+  });
+});
+
+describe('weekOrder', () => {
+  it('starts at the given weekday and wraps around', () => {
+    expect(weekOrder(1)).toEqual([1, 2, 3, 4, 5, 6, 0]);
+    expect(weekOrder(0)).toEqual([0, 1, 2, 3, 4, 5, 6]);
   });
 });

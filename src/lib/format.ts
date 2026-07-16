@@ -16,3 +16,12 @@ export function formatDaysOfWeek(daysOfWeek: Weekday[]): string {
   const sorted = [...daysOfWeek].sort((a, b) => a - b);
   return sorted.map((d) => SHORT_LABELS[d]).join('·');
 }
+
+export function weekdayLetter(weekday: Weekday): string {
+  return SHORT_LABELS[weekday];
+}
+
+export function formatDayPart(time: string): 'Mañana' | 'Tarde' {
+  const [hour] = time.split(':').map(Number);
+  return hour < 13 ? 'Mañana' : 'Tarde';
+}

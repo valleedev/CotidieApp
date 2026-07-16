@@ -16,7 +16,12 @@ syncObservable(completions$, {
   },
 });
 
-export function addCompletion(habitId: ID, userId: ID, date: ISODate = todayLocalDateString()): void {
+export function addCompletion(
+  habitId: ID,
+  userId: ID,
+  date: ISODate = todayLocalDateString(),
+  reminderId: ID | null = null
+): void {
   const timestamp = nowIso();
   const completion: Completion = {
     id: newId(),
@@ -24,14 +29,19 @@ export function addCompletion(habitId: ID, userId: ID, date: ISODate = todayLoca
     userId,
     date,
     completedAt: timestamp,
+    reminderId,
     updatedAt: timestamp,
     deletedAt: null,
   };
   completions$[completion.id].set(completion);
 }
 
-export function undoOneCompletion(habitId: ID, date: ISODate = todayLocalDateString()): void {
-  const toUndo = pickCompletionToUndo(Object.values(completions$.get()), habitId, date);
+export function undoOneCompletion(
+  habitId: ID,
+  date: ISODate = todayLocalDateString(),
+  reminderId: ID | null = null
+): void {
+  const toUndo = pickCompletionToUndo(Object.values(completions$.get()), habitId, date, reminderId);
   if (!toUndo) return;
   completions$[toUndo.id].assign({ deletedAt: nowIso(), updatedAt: nowIso() });
 }

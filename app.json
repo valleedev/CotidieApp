@@ -6,7 +6,7 @@
     "scheme": "cotidie",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true
     },
@@ -27,7 +27,8 @@
       "expo-router",
       "expo-status-bar",
       "expo-sqlite",
-      "expo-font"
+      "expo-font",
+      "expo-notifications"
     ],
     "extra": {
       "router": {},

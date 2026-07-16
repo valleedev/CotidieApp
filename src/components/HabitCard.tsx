@@ -8,12 +8,14 @@ import type { Habit } from '../domain/types';
 export interface HabitCardProps {
   habit: Habit;
   onPress: () => void;
+  reminderSummary?: string;
 }
 
 // Presentacional: solo nombre/icono/color/días. No sabe de completions —
 // las pantallas que necesitan marcar completado componen CompletionControl aparte.
-export function HabitCard({ habit, onPress }: HabitCardProps) {
+export function HabitCard({ habit, onPress, reminderSummary }: HabitCardProps) {
   const colors = useThemeColors();
+  const subtitle = `${formatDaysOfWeek(habit.daysOfWeek)}${reminderSummary ? ' · ' + reminderSummary : ''}`;
 
   return (
     <Pressable
@@ -27,9 +29,7 @@ export function HabitCard({ habit, onPress }: HabitCardProps) {
         <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>
           {habit.name}
         </Text>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>
-          {formatDaysOfWeek(habit.daysOfWeek)}
-        </Text>
+        <Text style={[typography.caption, { color: colors.textMuted }]}>{subtitle}</Text>
       </View>
     </Pressable>
   );
