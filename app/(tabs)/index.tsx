@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useToday, type TodayHabitEntry } from '../../src/hooks/useToday';
 import { HabitCard } from '../../src/components/HabitCard';
 import { CompletionControl } from '../../src/components/CompletionControl';
+import { StreakBadge } from '../../src/components/StreakBadge';
 import { EmptyState } from '../../src/components/EmptyState';
 import { addCompletion, undoOneCompletion } from '../../src/state/completions$';
 import { LOCAL_USER_ID } from '../../src/lib/localUser';
@@ -11,10 +12,11 @@ import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, typography, radii } from '../../src/theme/tokens';
 
 function HabitRow({ entry }: { entry: TodayHabitEntry }) {
-  const { habit, count } = entry;
+  const { habit, count, currentStreak } = entry;
   return (
     <View style={styles.row}>
       <HabitCard habit={habit} onPress={() => router.push(`/habit/${habit.id}`)} />
+      <StreakBadge current={currentStreak} color={habit.color} />
       <CompletionControl
         target={habit.targetPerDay}
         count={count}
