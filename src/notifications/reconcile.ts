@@ -29,7 +29,13 @@ export async function reconcile(): Promise<void> {
 
   for (const reminderId of plan.toSchedule) {
     const reminder = reminders$[reminderId].get();
-    const habit = habits$[reminder.habitId].get();
+    const habit = reminder ? habits$[reminder.habitId].get() : undefined;
+    // Con sync remoto (Fase 4), reminders$/habits$ pueden llegar en orden
+    // distinto al cascadeo local (p.ej. si un habit se borró entre el cálculo
+    // del plan y este loop, tras el `await cancelNotifications` de arriba).
+    // Si falta, el próximo disparo reactivo del watcher (habits$/reminders$
+    // cambiaron) vuelve a intentarlo.
+    if (!reminder || !habit) continue;
     const resolvedDays = resolveReminderDays(reminder, habit);
     const specs = buildTriggerSpecs(reminder, resolvedDays);
     const signature = signatureOf(reminder, resolvedDays);

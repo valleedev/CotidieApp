@@ -1,23 +1,31 @@
 import { observable } from '@legendapp/state';
-import { syncObservable } from '@legendapp/state/sync';
+import { syncedSupabase } from '@legendapp/state/sync-plugins/supabase';
 import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
 import { SQLiteStorage } from 'expo-sqlite/kv-store';
 import type { Habit, ID, Weekday } from '../domain/types';
 import { newId } from '../lib/uuid';
 import { nowIso } from '../lib/dates';
-import { LOCAL_USER_ID } from '../lib/localUser';
+import { currentUserId } from './session$';
+import { supabase } from '../lib/supabase';
+import '../lib/supabaseSync';
+import { habitTransform } from '../lib/syncTransforms';
 import { reminders$, softDeleteReminder } from './reminders$';
 
 export type { Habit };
 
-export const habits$ = observable<Record<string, Habit>>({});
-
-syncObservable(habits$, {
-  persist: {
-    name: 'habits',
-    plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
-  },
-});
+export const habits$ = observable<Record<string, Habit>>(
+  syncedSupabase({
+    supabase,
+    collection: 'habits',
+    actions: ['create', 'read', 'update'],
+    realtime: true,
+    changesSince: 'last-sync',
+    fieldCreatedAt: 'created_at',
+    fieldUpdatedAt: 'updated_at',
+    transform: habitTransform,
+    persist: { name: 'habits', plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')) },
+  })
+);
 
 export interface CreateHabitInput {
   name: string;
@@ -33,7 +41,7 @@ export function createHabit(input: CreateHabitInput): Habit {
   const timestamp = nowIso();
   const habit: Habit = {
     id: newId(),
-    userId: LOCAL_USER_ID,
+    userId: currentUserId()!,
     name: input.name,
     color: input.color,
     icon: input.icon,

@@ -13,7 +13,7 @@ import { Fab } from '../../src/components/Fab';
 import { addCompletion, undoOneCompletion } from '../../src/state/completions$';
 import { settings$ } from '../../src/state/settings$';
 import { isDone } from '../../src/domain/completion';
-import { LOCAL_USER_ID } from '../../src/lib/localUser';
+import { currentUserId } from '../../src/state/session$';
 import { todayLocalDateString } from '../../src/lib/dates';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, typography, radii } from '../../src/theme/tokens';
@@ -23,7 +23,7 @@ function toggleGeneric(entry: TodayHabitEntry) {
   if (isDone(entry.count, entry.target)) {
     undoOneCompletion(entry.habit.id);
   } else {
-    addCompletion(entry.habit.id, LOCAL_USER_ID);
+    addCompletion(entry.habit.id, currentUserId()!);
   }
 }
 
@@ -33,7 +33,7 @@ function toggleReminder(entry: TodayHabitEntry, reminderId: string) {
   if (status?.done) {
     undoOneCompletion(entry.habit.id, today, reminderId);
   } else {
-    addCompletion(entry.habit.id, LOCAL_USER_ID, today, reminderId);
+    addCompletion(entry.habit.id, currentUserId()!, today, reminderId);
   }
 }
 

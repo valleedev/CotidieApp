@@ -1,22 +1,32 @@
 import { observable } from '@legendapp/state';
-import { syncObservable } from '@legendapp/state/sync';
+import { syncedSupabase } from '@legendapp/state/sync-plugins/supabase';
 import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
 import { SQLiteStorage } from 'expo-sqlite/kv-store';
 import type { ID, Reminder, Weekday } from '../domain/types';
 import { newId } from '../lib/uuid';
 import { nowIso } from '../lib/dates';
-import { LOCAL_USER_ID } from '../lib/localUser';
+import { currentUserId } from './session$';
+import { supabase } from '../lib/supabase';
+import '../lib/supabaseSync';
+import { reminderTransform } from '../lib/syncTransforms';
 
 export type { Reminder };
 
-export const reminders$ = observable<Record<string, Reminder>>({});
-
-syncObservable(reminders$, {
-  persist: {
-    name: 'reminders',
-    plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
-  },
-});
+export const reminders$ = observable<Record<string, Reminder>>(
+  syncedSupabase({
+    supabase,
+    collection: 'reminders',
+    actions: ['create', 'read', 'update'],
+    realtime: true,
+    changesSince: 'last-sync',
+    fieldUpdatedAt: 'updated_at',
+    transform: reminderTransform,
+    persist: {
+      name: 'reminders',
+      plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+    },
+  })
+);
 
 export interface CreateReminderInput {
   habitId: ID;
@@ -29,7 +39,7 @@ export function createReminder(input: CreateReminderInput): Reminder {
   const timestamp = nowIso();
   const reminder: Reminder = {
     id: newId(),
-    userId: LOCAL_USER_ID,
+    userId: currentUserId()!,
     habitId: input.habitId,
     time: input.time,
     daysOfWeek: input.daysOfWeek,

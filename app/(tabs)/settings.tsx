@@ -14,6 +14,8 @@ import {
 } from '../../src/notifications/permissions';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, radii, typography } from '../../src/theme/tokens';
+import { SyncStatusChip } from '../../src/components/SyncStatusChip';
+import { supabase } from '../../src/lib/supabase';
 
 const STATUS_LABELS = {
   granted: 'Concedido',
@@ -49,6 +51,8 @@ export default function Settings() {
   return (
     <SafeAreaView edges={['top']} style={[styles.container, { backgroundColor: colors.background }]}>
       <Text style={[typography.title, { color: colors.text }]}>Ajustes</Text>
+
+      <SyncStatusChip />
 
       <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <Text style={[typography.body, { color: colors.text }]}>Perfil</Text>
@@ -97,6 +101,10 @@ export default function Settings() {
           </Pressable>
         </View>
       </View>
+
+      <Pressable onPress={() => supabase.auth.signOut()} style={styles.actionButton}>
+        <Text style={[typography.body, { color: colors.danger }]}>Cerrar sesión</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
