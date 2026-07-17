@@ -70,11 +70,11 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="habit/new"
-                  options={{ presentation: 'modal', headerShown: true, title: 'Crear hábito' }}
+                  options={{ presentation: 'modal', headerShown: true }}
                 />
                 <Stack.Screen
                   name="habit/[id]"
-                  options={{ presentation: 'modal', headerShown: true, title: 'Editar hábito' }}
+                  options={{ presentation: 'modal', headerShown: true }}
                 />
               </Stack.Protected>
             </Stack>

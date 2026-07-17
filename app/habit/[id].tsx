@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { HabitForm } from '../../src/components/HabitForm';
+import { HabitForm, type HabitFormHandle } from '../../src/components/HabitForm';
+import { HabitFormHeaderLeft, HabitFormHeaderRight, HabitFormHeaderTitle } from '../../src/components/HabitFormHeader';
 import { MiniCalendar } from '../../src/components/MiniCalendar';
 import { updateHabit, softDeleteHabit } from '../../src/state/habits$';
 import { reminders$, createReminder, updateReminder, softDeleteReminder } from '../../src/state/reminders$';
@@ -15,6 +16,8 @@ export default function HabitDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useHabitDetail(id);
   const colors = useThemeColors();
+  const formRef = useRef<HabitFormHandle>(null);
+  const [canSubmit, setCanSubmit] = useState(false);
 
   useEffect(() => {
     if (!detail) {
@@ -47,6 +50,19 @@ export default function HabitDetail() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <Stack.Screen
+        options={{
+          headerLeft: () => <HabitFormHeaderLeft onPress={() => router.back()} />,
+          headerTitle: () => <HabitFormHeaderTitle eyebrow="Editar hábito" title={habit.name} />,
+          headerRight: () => (
+            <HabitFormHeaderRight
+              label="Guardar"
+              disabled={!canSubmit}
+              onPress={() => formRef.current?.submit()}
+            />
+          ),
+        }}
+      />
       <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.statsHeader}>
           <View style={[styles.iconBadge, { backgroundColor: habit.color }]}>
@@ -69,9 +85,11 @@ export default function HabitDetail() {
         <MiniCalendar completedDates={completedDates} color={habit.color} />
       </View>
       <HabitForm
+        ref={formRef}
         initial={habit}
         initialReminders={existingReminders}
         submitLabel="Guardar"
+        onCanSubmitChange={setCanSubmit}
         onSubmit={(values, reminderDrafts) => {
           updateHabit(id, values);
           const { toCreate, toUpdate, toDeleteIds } = diffReminderDrafts(

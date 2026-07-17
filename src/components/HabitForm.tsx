@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, radii, typography, HABIT_COLORS } from '../theme/tokens';
@@ -19,18 +19,26 @@ export interface HabitFormValues {
   targetPerDay: number;
 }
 
+export interface HabitFormHandle {
+  submit: () => void;
+}
+
 export interface HabitFormProps {
   initial?: Habit;
   initialReminders?: Reminder[];
   submitLabel: string;
   onSubmit: (values: HabitFormValues, reminderDrafts: ReminderDraft[]) => void;
+  onCanSubmitChange?: (canSubmit: boolean) => void;
 }
 
 function reminderToDraft(reminder: Reminder): ReminderDraft {
   return { id: reminder.id, time: reminder.time, daysOfWeek: reminder.daysOfWeek, enabled: reminder.enabled };
 }
 
-export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmit }: HabitFormProps) {
+export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function HabitForm(
+  { initial, initialReminders = [], submitLabel, onSubmit, onCanSubmitChange },
+  ref
+) {
   const colors = useThemeColors();
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState(initial?.color ?? HABIT_COLORS[0]);
@@ -54,6 +62,12 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
     );
   }
 
+  useImperativeHandle(ref, () => ({ submit: handleSubmit }), [handleSubmit]);
+
+  useEffect(() => {
+    onCanSubmitChange?.(canSubmit);
+  }, [canSubmit, onCanSubmitChange]);
+
   async function handleAddReminder() {
     const status = await refreshPermissionStatusAsync();
     if (status === 'undetermined') {
@@ -74,54 +88,63 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted }]}>Nombre</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Ej. Leer"
-          placeholderTextColor={colors.textMuted}
+        <View
           style={[
-            styles.input,
-            typography.body,
-            { color: colors.text, borderColor: nameError ? colors.danger : colors.border },
+            styles.nameCard,
+            { backgroundColor: colors.surface, borderColor: nameError ? colors.danger : colors.border },
           ]}
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Categoría (opcional)</Text>
-        <TextInput
-          value={category}
-          onChangeText={setCategory}
-          placeholder="Ej. Reto de salud"
-          placeholderTextColor={colors.textMuted}
-          style={[styles.input, typography.body, { color: colors.text, borderColor: colors.border }]}
-        />
-      </View>
-
-      <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Color</Text>
-        <View style={styles.colorRow}>
-          {HABIT_COLORS.map((c) => (
-            <Pressable
-              key={c}
-              onPress={() => setColor(c)}
-              style={[
-                styles.colorSwatch,
-                { backgroundColor: c, borderColor: c === color ? colors.text : 'transparent' },
-              ]}
+        >
+          <View style={[styles.iconBadge, { backgroundColor: color }]}>
+            <Ionicons name={icon as never} size={18} color="#FFFFFF" />
+          </View>
+          <View style={styles.nameTextBlock}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              placeholder="Ej. Leer"
+              placeholderTextColor={colors.textMuted}
+              style={[typography.body, { color: colors.text }]}
             />
-          ))}
+            <TextInput
+              value={category}
+              onChangeText={setCategory}
+              placeholder="Añadir categoría (opcional)"
+              placeholderTextColor={colors.textMuted}
+              style={[typography.caption, { color: colors.textMuted }]}
+            />
+          </View>
+          {name.length > 0 ? (
+            <Pressable onPress={() => setName('')} hitSlop={8} style={styles.clearButton}>
+              <Ionicons name="close" size={14} color={colors.textMuted} />
+            </Pressable>
+          ) : null}
         </View>
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Icono</Text>
-        <IconPicker value={icon} onChange={setIcon} />
+        <Text style={[typography.caption, { color: colors.textMuted }]}>Icono y color</Text>
+        <View style={[styles.iconColorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <IconPicker value={icon} onChange={setIcon} />
+          <View style={styles.colorRow}>
+            {HABIT_COLORS.map((c) => {
+              const selected = c === color;
+              return (
+                <Pressable
+                  key={c}
+                  onPress={() => setColor(c)}
+                  style={[styles.colorSwatch, { backgroundColor: c }]}
+                >
+                  {selected ? <Ionicons name="checkmark" size={18} color="#FFFFFF" /> : null}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       </View>
 
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted }]}>¿Qué días?</Text>
-        <WeekdayPicker value={daysOfWeek} onChange={setDaysOfWeek} />
+        <WeekdayPicker value={daysOfWeek} onChange={setDaysOfWeek} showSummary />
         {daysError ? (
           <Text style={[typography.caption, { color: colors.danger }]}>Elige al menos un día.</Text>
         ) : null}
@@ -129,21 +152,22 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
 
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted }]}>Veces al día</Text>
-        <View style={styles.stepper}>
+        <View style={[styles.targetCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
           <Pressable
             onPress={() => setTargetPerDay((t) => Math.max(1, t - 1))}
-            style={[styles.stepperButton, { borderColor: colors.border }]}
+            style={[styles.targetButton, { backgroundColor: colors.background }]}
           >
             <Ionicons name="remove" size={18} color={colors.text} />
           </Pressable>
-          <Text style={[typography.body, { color: colors.text, minWidth: 24, textAlign: 'center' }]}>
-            {targetPerDay}
-          </Text>
+          <View style={styles.targetCenter}>
+            <Text style={[typography.title, { color: colors.text }]}>{targetPerDay}</Text>
+            <Text style={[typography.caption, { color: colors.textMuted }]}>veces al día</Text>
+          </View>
           <Pressable
             onPress={() => setTargetPerDay((t) => Math.min(10, t + 1))}
-            style={[styles.stepperButton, { borderColor: colors.border }]}
+            style={[styles.targetButton, { backgroundColor: colors.successBackground }]}
           >
-            <Ionicons name="add" size={18} color={colors.text} />
+            <Ionicons name="add" size={18} color={colors.success} />
           </Pressable>
         </View>
       </View>
@@ -159,27 +183,14 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
             onRemove={() => removeReminderDraft(index)}
           />
         ))}
-        <Pressable onPress={handleAddReminder} style={styles.addReminderButton}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-          <Text style={[typography.body, { color: colors.primary }]}>Añadir recordatorio</Text>
+        <Pressable onPress={handleAddReminder} style={[styles.addReminderButton, { borderColor: colors.success }]}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.success} />
+          <Text style={[typography.body, { color: colors.success }]}>Añadir recordatorio</Text>
         </Pressable>
       </View>
-
-      <Pressable
-        onPress={handleSubmit}
-        disabled={!canSubmit}
-        style={[
-          styles.submitButton,
-          { backgroundColor: canSubmit ? colors.primary : colors.border },
-        ]}
-      >
-        <Text style={[typography.body, { color: colors.background, fontWeight: '600' }]}>
-          {submitLabel}
-        </Text>
-      </Pressable>
     </ScrollView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -189,11 +200,39 @@ const styles = StyleSheet.create({
   field: {
     gap: spacing.sm,
   },
-  input: {
+  nameCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
     borderWidth: 1,
     borderRadius: radii.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+  },
+  nameTextBlock: {
+    flex: 1,
+    gap: 2,
+  },
+  iconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: radii.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearButton: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(138, 147, 172, 0.2)',
+  },
+  iconColorCard: {
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    gap: spacing.md,
   },
   colorRow: {
     flexDirection: 'row',
@@ -201,35 +240,38 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   colorSwatch: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: radii.full,
-    borderWidth: 3,
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  stepperButton: {
-    width: 36,
-    height: 36,
-    borderRadius: radii.full,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitButton: {
-    marginTop: spacing.md,
-    paddingVertical: spacing.md,
+  targetCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
     borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  targetButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  targetCenter: {
     alignItems: 'center',
   },
   addReminderButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: spacing.xs,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm,
   },
 });

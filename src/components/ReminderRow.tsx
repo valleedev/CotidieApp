@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { WeekdayPicker } from './WeekdayPicker';
+import { describeReminderTime } from '../domain/reminderLabel';
 import type { ReminderDraft } from '../domain/reminders';
 import type { Weekday } from '../domain/types';
 
@@ -23,6 +24,7 @@ export function ReminderRow({ value, habitDaysOfWeek, onChange, onRemove }: Remi
   const hour = Number(hourStr);
   const minute = Number(minuteStr);
   const customDays = value.daysOfWeek !== null;
+  const { icon, label } = describeReminderTime(value.time);
 
   function setTime(nextHour: number, nextMinute: number) {
     const h = ((nextHour % 24) + 24) % 24;
@@ -37,10 +39,14 @@ export function ReminderRow({ value, habitDaysOfWeek, onChange, onRemove }: Remi
   return (
     <View style={[styles.container, { borderColor: colors.border, backgroundColor: colors.surface }]}>
       <View style={styles.row}>
-        <View style={styles.timeRow}>
-          <Stepper label={pad(hour)} onDecrement={() => setTime(hour - 1, minute)} onIncrement={() => setTime(hour + 1, minute)} />
-          <Text style={[typography.body, { color: colors.text }]}>:</Text>
-          <Stepper label={pad(minute)} onDecrement={() => setTime(hour, minute - 5)} onIncrement={() => setTime(hour, minute + 5)} />
+        <View style={styles.timeLabel}>
+          <Ionicons name={icon} size={18} color={icon === 'sunny' ? colors.success : colors.textMuted} />
+          <View style={styles.timeStepperRow}>
+            <MiniStepper value={pad(hour)} onDecrement={() => setTime(hour - 1, minute)} onIncrement={() => setTime(hour + 1, minute)} />
+            <Text style={[typography.body, { color: colors.text }]}>:</Text>
+            <MiniStepper value={pad(minute)} onDecrement={() => setTime(hour, minute - 5)} onIncrement={() => setTime(hour, minute + 5)} />
+            <Text style={[typography.caption, { color: colors.textMuted }]}> · {label}</Text>
+          </View>
         </View>
         <Switch
           value={value.enabled}
@@ -52,40 +58,42 @@ export function ReminderRow({ value, habitDaysOfWeek, onChange, onRemove }: Remi
         </Pressable>
       </View>
 
-      <Pressable onPress={toggleCustomDays}>
-        <Text style={[typography.caption, { color: colors.primary }]}>
-          {customDays ? 'Personalizar días' : 'Todos los días del hábito'}
-        </Text>
-      </Pressable>
+      <View style={[styles.customDaysSection, { borderTopColor: colors.border }]}>
+        <Pressable onPress={toggleCustomDays}>
+          <Text style={[typography.caption, { color: colors.primary }]}>
+            {customDays ? 'Personalizar días' : 'Todos los días del hábito'}
+          </Text>
+        </Pressable>
 
-      {customDays ? (
-        <WeekdayPicker
-          value={value.daysOfWeek ?? habitDaysOfWeek}
-          onChange={(days) => onChange({ ...value, daysOfWeek: days })}
-        />
-      ) : null}
+        {customDays ? (
+          <WeekdayPicker
+            value={value.daysOfWeek ?? habitDaysOfWeek}
+            onChange={(days) => onChange({ ...value, daysOfWeek: days })}
+          />
+        ) : null}
+      </View>
     </View>
   );
 }
 
-function Stepper({
-  label,
+function MiniStepper({
+  value,
   onDecrement,
   onIncrement,
 }: {
-  label: string;
+  value: string;
   onDecrement: () => void;
   onIncrement: () => void;
 }) {
   const colors = useThemeColors();
   return (
-    <View style={styles.stepper}>
-      <Pressable onPress={onDecrement} style={[styles.stepperButton, { borderColor: colors.border }]}>
-        <Ionicons name="remove" size={16} color={colors.text} />
+    <View style={styles.miniStepper}>
+      <Pressable onPress={onDecrement} hitSlop={6}>
+        <Ionicons name="chevron-back" size={12} color={colors.textMuted} />
       </Pressable>
-      <Text style={[typography.body, { color: colors.text, minWidth: 28, textAlign: 'center' }]}>{label}</Text>
-      <Pressable onPress={onIncrement} style={[styles.stepperButton, { borderColor: colors.border }]}>
-        <Ionicons name="add" size={16} color={colors.text} />
+      <Text style={[typography.body, { color: colors.text, minWidth: 22, textAlign: 'center' }]}>{value}</Text>
+      <Pressable onPress={onIncrement} hitSlop={6}>
+        <Ionicons name="chevron-forward" size={12} color={colors.textMuted} />
       </Pressable>
     </View>
   );
@@ -104,22 +112,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: spacing.sm,
   },
-  timeRow: {
+  timeLabel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+    flex: 1,
   },
-  stepper: {
+  timeStepperRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
   },
-  stepperButton: {
-    width: 28,
-    height: 28,
-    borderRadius: radii.full,
-    borderWidth: 1,
+  miniStepper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 2,
+  },
+  customDaysSection: {
+    borderTopWidth: 1,
+    paddingTop: spacing.sm,
+    gap: spacing.sm,
   },
 });
