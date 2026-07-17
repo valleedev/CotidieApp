@@ -77,3 +77,16 @@ export function consistency30d(
   if (statuses.length === 0) return null;
   return statuses.filter(Boolean).length / statuses.length;
 }
+
+// Promedio de consistency30d entre hábitos con dato. null si ninguno tiene dato.
+export function overallConsistency(entries: { consistency30d: number | null }[]): number | null {
+  const values = entries.map((e) => e.consistency30d).filter((v): v is number => v !== null);
+  if (values.length === 0) return null;
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+export function consistencyLabel(ratio: number): string {
+  if (ratio >= 0.8) return 'Excelente';
+  if (ratio >= 0.5) return 'Bien';
+  return 'Sigue así';
+}
