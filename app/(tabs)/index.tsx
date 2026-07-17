@@ -88,10 +88,6 @@ export default function TodayScreen() {
               <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
                 <Text style={[typography.caption, { color: colors.text }]}>{pending.length}</Text>
               </View>
-              <View style={styles.verTodosRow}>
-                <Text style={[typography.caption, { color: colors.primary }]}>Ver todos</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
-              </View>
             </View>
             {pending.map((entry) => (
               <HabitTodayCard
@@ -116,10 +112,6 @@ export default function TodayScreen() {
               </Text>
               <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
                 <Text style={[typography.caption, { color: colors.text }]}>{completed.length}</Text>
-              </View>
-              <View style={styles.verTodosRow}>
-                <Text style={[typography.caption, { color: colors.primary }]}>Ver todos</Text>
-                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
               </View>
             </View>
             {completed.map((entry) => (
@@ -163,11 +155,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  verTodosRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
   },
   banner: {
     padding: spacing.md,

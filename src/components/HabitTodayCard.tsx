@@ -3,7 +3,6 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   FadeIn,
-  FadeInDown,
   FadeOut,
   LinearTransition,
   ZoomIn,
@@ -71,14 +70,17 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
         </View>
         <StreakBadge current={currentStreak} />
         {done ? (
-          <Animated.View
+          <AnimatedPressable
             key="done"
             entering={ZoomIn}
             exiting={ZoomOut}
+            onPress={hasReminders ? undefined : onToggleGeneric}
+            disabled={hasReminders}
+            hitSlop={8}
             style={[styles.doneCheck, { backgroundColor: colors.success }]}
           >
             <Ionicons name="checkmark" size={16} color={colors.background} />
-          </Animated.View>
+          </AnimatedPressable>
         ) : hasReminders ? (
           <Animated.View key="reminders" entering={ZoomIn} exiting={ZoomOut} style={styles.rightControls}>
             <View style={[styles.countChip, { backgroundColor: colors.surfaceElevated }]}>
@@ -148,7 +150,7 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
 
       {done ? (
         <Animated.View
-          entering={FadeInDown.duration(duration.normal)}
+          entering={FadeIn.duration(duration.normal)}
           exiting={FadeOut.duration(duration.fast)}
           style={[styles.banner, { backgroundColor: colors.successPill }]}
         >
