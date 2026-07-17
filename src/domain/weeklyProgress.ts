@@ -1,7 +1,6 @@
 import { addDays, startOfDay, startOfWeek } from 'date-fns';
 import { isScheduledOn } from './scheduling';
-import { activeRemindersOn, effectiveTargetOn } from './reminders';
-import { countCompletedReminders, countCompletions, isDone } from './completion';
+import { dayCompletionRatio } from './completion';
 import { toLocalDateString } from '../lib/dates';
 import type { Habit, Reminder, Completion, Weekday, ISODate } from './types';
 
@@ -30,9 +29,6 @@ function isDayFullyCompleted(
   completions: Completion[],
   date: Date
 ): { hasScheduledHabits: boolean; isFullyCompleted: boolean } {
-  const weekday = date.getDay() as Weekday;
-  const dateStr = toLocalDateString(date);
-
   const scheduledHabits = habits.filter(
     (h) => h.deletedAt === null && habitExistedOn(h, date) && isScheduledOn(h.daysOfWeek, date)
   );
@@ -41,14 +37,9 @@ function isDayFullyCompleted(
     return { hasScheduledHabits: false, isFullyCompleted: false };
   }
 
-  const allDone = scheduledHabits.every((habit) => {
-    const active = activeRemindersOn(reminders, habit, weekday);
-    const count =
-      active.length > 0
-        ? countCompletedReminders(completions, habit.id, dateStr, active.map((r) => r.id))
-        : countCompletions(completions, habit.id, dateStr);
-    return isDone(count, effectiveTargetOn(habit, reminders, weekday));
-  });
+  const allDone = scheduledHabits.every(
+    (habit) => dayCompletionRatio(habit, reminders, completions, date).done
+  );
 
   return { hasScheduledHabits: true, isFullyCompleted: allDone };
 }

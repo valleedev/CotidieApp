@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { HabitHeatmap } from './HabitHeatmap';
 import type { ProgressEntry } from '../hooks/useProgress';
 
 export interface ProgressRowProps {
@@ -14,7 +15,7 @@ function formatConsistency(value: number | null): string {
 
 export function ProgressRow({ entry }: ProgressRowProps) {
   const colors = useThemeColors();
-  const { habit, currentStreak, bestStreak, consistency30d } = entry;
+  const { habit, currentStreak, bestStreak, consistency30d, history } = entry;
 
   return (
     <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -40,6 +41,7 @@ export function ProgressRow({ entry }: ProgressRowProps) {
           <Text style={[typography.caption, { color: colors.textMuted }]}>Constancia 30d</Text>
         </View>
       </View>
+      <HabitHeatmap history={history} color={habit.color} />
     </View>
   );
 }

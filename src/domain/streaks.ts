@@ -1,24 +1,11 @@
 import { eachDayOfInterval, parseISO } from 'date-fns';
-import { countCompletedReminders, countCompletions, isDone } from './completion';
-import { activeRemindersOn, effectiveTargetOn } from './reminders';
+import { dayCompletionRatio } from './completion';
 import { isScheduledOn } from './scheduling';
-import type { Completion, Habit, Reminder, Weekday } from './types';
+import type { Completion, Habit, Reminder } from './types';
 import { toLocalDateString } from '../lib/dates';
 
 function habitCreatedLocalDate(habit: Habit): Date {
   return parseISO(toLocalDateString(new Date(habit.createdAt)));
-}
-
-// Cuenta "hecho" de un día: si hay recordatorios activos ese weekday, cuenta
-// completions ligadas a esos recordatorios; si no, cuenta genéricas (igual que antes).
-function dayCount(habit: Habit, reminders: Reminder[], completions: Completion[], date: Date): number {
-  const weekday = date.getDay() as Weekday;
-  const dateStr = toLocalDateString(date);
-  const active = activeRemindersOn(reminders, habit, weekday);
-  if (active.length > 0) {
-    return countCompletedReminders(completions, habit.id, dateStr, active.map((r) => r.id));
-  }
-  return countCompletions(completions, habit.id, dateStr);
 }
 
 // Estado "hecho" de cada día PROGRAMADO en [from, to], en orden cronológico.
@@ -33,9 +20,7 @@ function scheduledDayStatuses(
   if (from > to) return [];
   return eachDayOfInterval({ start: from, end: to })
     .filter((d) => isScheduledOn(habit.daysOfWeek, d))
-    .map((d) =>
-      isDone(dayCount(habit, reminders, completions, d), effectiveTargetOn(habit, reminders, d.getDay() as Weekday))
-    );
+    .map((d) => dayCompletionRatio(habit, reminders, completions, d).done);
 }
 
 export function currentStreak(

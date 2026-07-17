@@ -1,4 +1,6 @@
-import type { Completion, ID, ISODate } from './types';
+import { activeRemindersOn, effectiveTargetOn } from './reminders';
+import { toLocalDateString } from '../lib/dates';
+import type { Completion, Habit, ID, ISODate, Reminder, Weekday } from './types';
 
 export function countCompletions(completions: Completion[], habitId: ID, date: ISODate): number {
   return completions.filter(
@@ -48,6 +50,26 @@ export function countCompletedReminders(
 
 export function isDone(count: number, targetPerDay: number): boolean {
   return count >= targetPerDay;
+}
+
+// Cuenta "hecho" de un día contra su target efectivo: si hay recordatorios activos
+// ese weekday, cuenta completions ligadas a esos recordatorios (uno por recordatorio,
+// ignorando targetPerDay); si no, cae a completions genéricas + targetPerDay manual.
+export function dayCompletionRatio(
+  habit: Habit,
+  reminders: Reminder[],
+  completions: Completion[],
+  date: Date
+): { count: number; target: number; done: boolean } {
+  const weekday = date.getDay() as Weekday;
+  const dateStr = toLocalDateString(date);
+  const active = activeRemindersOn(reminders, habit, weekday);
+  const count =
+    active.length > 0
+      ? countCompletedReminders(completions, habit.id, dateStr, active.map((r) => r.id))
+      : countCompletions(completions, habit.id, dateStr);
+  const target = effectiveTargetOn(habit, reminders, weekday);
+  return { count, target, done: isDone(count, target) };
 }
 
 export function progress(count: number, targetPerDay: number): number {
