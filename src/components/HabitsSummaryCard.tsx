@@ -23,7 +23,10 @@ export function HabitsSummaryCard({ currentStreak }: HabitsSummaryCardProps) {
       </View>
       <View style={[styles.divider, { backgroundColor: colors.border }]} />
       <View style={styles.streak}>
-        <Text style={[typography.title, { color: colors.primary }]}>{currentStreak} días</Text>
+        <Text style={[typography.hero, { color: colors.primary, lineHeight: undefined }]}>
+          {currentStreak}
+        </Text>
+        <Text style={[typography.caption, { color: colors.primary, fontWeight: '600' }]}>días</Text>
         <Text style={[typography.caption, { color: colors.textMuted }]}>racha actual</Text>
       </View>
     </View>

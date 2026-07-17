@@ -63,15 +63,13 @@ export default function HabitsScreen() {
           </Pressable>
         )}
       >
-        <View style={[styles.itemWrapper, { opacity: isActive ? 0.7 : 1 }]}>
+        <View style={{ marginBottom: spacing.sm, opacity: isActive ? 0.7 : 1 }}>
           <HabitCard
             habit={item}
             onPress={() => router.push(`/habit/${item.id}`)}
             reminderSummary={reminderSummaryFor(item)}
+            onReorderLongPress={drag}
           />
-          <Pressable onLongPress={drag} style={styles.dragHandle}>
-            <Ionicons name="reorder-three" size={22} color={colors.textMuted} />
-          </Pressable>
         </View>
       </Swipeable>
     );
@@ -88,7 +86,7 @@ export default function HabitsScreen() {
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={styles.headerTexts}>
-              <Text style={[typography.title, { color: colors.text }]}>Hábitos</Text>
+              <Text style={[typography.hero, { color: colors.text }]}>Hábitos</Text>
               <Text style={[typography.body, { color: colors.textMuted }]}>
                 Pequeñas acciones, grandes cambios.
               </Text>
@@ -115,15 +113,6 @@ const styles = StyleSheet.create({
   },
   headerTexts: {
     gap: 2,
-  },
-  itemWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.sm,
-  },
-  dragHandle: {
-    padding: spacing.sm,
   },
   deleteAction: {
     width: 64,
