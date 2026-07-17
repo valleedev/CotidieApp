@@ -35,6 +35,7 @@ export function EditNameModal({ visible, initialValue, onSave, onClose }: EditNa
             typography.body,
             { color: colors.text, borderColor: colors.border },
           ]}
+          maxLength={40}
           autoFocus
         />
         <Pressable

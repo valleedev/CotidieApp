@@ -32,15 +32,25 @@ function adoptLocalData(userId: string): void {
 // push — si no, la RLS `with check (user_id = auth.uid())` rechazaría filas
 // aún bajo LOCAL_USER_ID. peek() en localDataAdopted$ evita reactividad
 // circular (el propio adoptLocalData la pone en true).
-// Espera a isLoaded de los 3 observables (habits$/completions$/reminders$
-// arrancan en `undefined` hasta la primera hidratación local/remota — sin
-// esto, un dispositivo sin caché SQLite previa dispara `Object.values(undefined)`
-// justo al crear cuenta, con la app cerrándose sin aviso).
+// Espera a isPersistLoaded (hidratación de la caché SQLite local) de los 3
+// observables — habits$/completions$/reminders$ arrancan en `undefined`
+// hasta esa hidratación, y sin esperarla `Object.values(undefined)` revienta
+// justo al crear cuenta, con la app cerrándose sin aviso.
+// OJO: NO usar `isLoaded` acá — ese flag solo se pone en true cuando termina
+// el fetch remoto, y el fetch remoto está bloqueado por `isSyncEnabled$`
+// (via `waitFor` del plugin de supabase), que a su vez depende de que este
+// watcher corra primero. Usar `isLoaded` crea un deadlock circular: nada se
+// adopta → `isSyncEnabled$` nunca se activa → el fetch remoto nunca corre →
+// `isLoaded` nunca es true → nada se adopta. `isPersistLoaded` es local,
+// no depende de `isSyncEnabled$`, y rompe el ciclo.
 export function startAdoptLocalDataWatcher(): () => void {
   return observe(() => {
     const session = session$.get();
     if (!session || localDataAdopted$.peek()) return;
-    const ready = habitsSync$.isLoaded.get() && completionsSync$.isLoaded.get() && remindersSync$.isLoaded.get();
+    const ready =
+      habitsSync$.isPersistLoaded.get() &&
+      completionsSync$.isPersistLoaded.get() &&
+      remindersSync$.isPersistLoaded.get();
     if (!ready) return;
     adoptLocalData(session.user.id);
   });

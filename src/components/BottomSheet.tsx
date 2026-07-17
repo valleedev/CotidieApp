@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
+  useAnimatedKeyboard,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -30,6 +31,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
   const sheetHeight = useSharedValue(0);
   const translateY = useSharedValue(0);
   const backdropOpacity = useSharedValue(0);
+  const keyboard = useAnimatedKeyboard();
 
   useEffect(() => {
     if (visible) {
@@ -64,7 +66,9 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
     });
 
   const backdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
+  const sheetStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value - keyboard.height.value }],
+  }));
 
   if (!mounted) return null;
 
