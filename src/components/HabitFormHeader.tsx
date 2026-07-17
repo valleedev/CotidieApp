@@ -3,11 +3,17 @@ import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 
-export function HabitFormHeaderLeft({ onPress }: { onPress: () => void }) {
+export function HabitFormHeaderLeft({
+  onPress,
+  icon = 'close',
+}: {
+  onPress: () => void;
+  icon?: 'close' | 'chevron-back';
+}) {
   const colors = useThemeColors();
   return (
     <Pressable onPress={onPress} hitSlop={8} style={styles.leftButton}>
-      <Ionicons name="close" size={22} color={colors.text} />
+      <Ionicons name={icon} size={22} color={colors.text} />
     </Pressable>
   );
 }

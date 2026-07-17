@@ -1,23 +1,23 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { HabitForm, type HabitFormHandle } from '../../src/components/HabitForm';
-import { HabitFormHeaderLeft, HabitFormHeaderRight, HabitFormHeaderTitle } from '../../src/components/HabitFormHeader';
-import { MiniCalendar } from '../../src/components/MiniCalendar';
-import { updateHabit, softDeleteHabit } from '../../src/state/habits$';
-import { reminders$, createReminder, updateReminder, softDeleteReminder } from '../../src/state/reminders$';
-import { diffReminderDrafts } from '../../src/domain/reminders';
+import { HabitFormHeaderLeft, HabitFormHeaderRight } from '../../src/components/HabitFormHeader';
+import { StatCard } from '../../src/components/StatCard';
+import { HabitHistoryGrid } from '../../src/components/HabitHistoryGrid';
+import { HabitDetailBanner } from '../../src/components/HabitDetailBanner';
 import { useHabitDetail } from '../../src/hooks/useHabitDetail';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, radii, typography } from '../../src/theme/tokens';
+
+function targetLabel(target: number): string {
+  return target === 1 ? '1 vez al día' : `${target} veces al día`;
+}
 
 export default function HabitDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const detail = useHabitDetail(id);
   const colors = useThemeColors();
-  const formRef = useRef<HabitFormHandle>(null);
-  const [canSubmit, setCanSubmit] = useState(false);
 
   useEffect(() => {
     if (!detail) {
@@ -29,117 +29,122 @@ export default function HabitDetail() {
     return null;
   }
 
-  const { habit, currentStreak, bestStreak, completedDates } = detail;
-  const existingReminders = Object.values(reminders$.get()).filter(
-    (r) => r.habitId === id && r.deletedAt === null
-  );
+  const { habit, currentStreak, bestStreak, history, weekStartsOn, reminderTimesLabel, daysSummary, targetPerDay } =
+    detail;
 
-  function handleDelete() {
-    Alert.alert('Eliminar hábito', `¿Seguro que quieres eliminar "${habit.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Eliminar',
-        style: 'destructive',
-        onPress: () => {
-          softDeleteHabit(id);
-          router.back();
-        },
-      },
-    ]);
-  }
+  const scheduleParts = [daysSummary, reminderTimesLabel || null, targetLabel(targetPerDay)].filter(
+    (part): part is string => !!part
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <Stack.Screen
         options={{
-          headerLeft: () => <HabitFormHeaderLeft onPress={() => router.back()} />,
-          headerTitle: () => <HabitFormHeaderTitle eyebrow="Editar hábito" title={habit.name} />,
+          title: 'Detalle',
+          headerLeft: () => <HabitFormHeaderLeft icon="chevron-back" onPress={() => router.back()} />,
           headerRight: () => (
             <HabitFormHeaderRight
-              label="Guardar"
-              disabled={!canSubmit}
-              onPress={() => formRef.current?.submit()}
+              label="Editar"
+              disabled={false}
+              onPress={() => router.push(`/habit/${id}/edit`)}
             />
           ),
         }}
       />
-      <View style={[styles.statsCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-        <View style={styles.statsHeader}>
-          <View style={[styles.iconBadge, { backgroundColor: habit.color }]}>
-            <Ionicons name={habit.icon as never} size={20} color="#FFFFFF" />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <View style={[styles.avatar, { backgroundColor: habit.color }]}>
+            <Ionicons name={habit.icon as never} size={32} color="#FFFFFF" />
           </View>
-          <Text style={[typography.title, { color: colors.text, flex: 1 }]} numberOfLines={1}>
+          <Text style={[typography.title, { color: colors.text }]} numberOfLines={1}>
             {habit.name}
           </Text>
-        </View>
-        <View style={styles.stats}>
-          <View style={styles.stat}>
-            <Text style={[typography.title, { color: colors.text }]}>{currentStreak}</Text>
-            <Text style={[typography.caption, { color: colors.textMuted }]}>Racha actual</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={[typography.title, { color: colors.text }]}>{bestStreak}</Text>
-            <Text style={[typography.caption, { color: colors.textMuted }]}>Mejor racha</Text>
+          <View style={styles.scheduleRow}>
+            <Ionicons name="calendar-outline" size={14} color={colors.flame} />
+            <Text style={[typography.caption, { color: colors.textMuted }]}>
+              {scheduleParts.join(' · ')}
+            </Text>
           </View>
         </View>
-        <MiniCalendar completedDates={completedDates} color={habit.color} />
-      </View>
-      <HabitForm
-        ref={formRef}
-        initial={habit}
-        initialReminders={existingReminders}
-        submitLabel="Guardar"
-        onCanSubmitChange={setCanSubmit}
-        onSubmit={(values, reminderDrafts) => {
-          updateHabit(id, values);
-          const { toCreate, toUpdate, toDeleteIds } = diffReminderDrafts(
-            id,
-            existingReminders,
-            reminderDrafts
-          );
-          toCreate.forEach(createReminder);
-          toUpdate.forEach(({ id: reminderId, patch }) => updateReminder(reminderId, patch));
-          toDeleteIds.forEach(softDeleteReminder);
-          router.back();
-        }}
-      />
-      <Pressable onPress={handleDelete} style={styles.deleteButton}>
-        <Text style={[typography.body, { color: colors.danger }]}>Eliminar hábito</Text>
-      </Pressable>
+
+        <View style={styles.statsRow}>
+          <StatCard
+            icon="flame"
+            iconColor={colors.flame}
+            iconBg={colors.flameMuted}
+            value={currentStreak}
+            label="Racha actual"
+            subtitle="¡Sigue así!"
+          />
+          <StatCard
+            icon="star"
+            iconColor={colors.gold}
+            iconBg={colors.goldMuted}
+            value={bestStreak}
+            label="Mejor racha"
+            subtitle="Tu récord"
+          />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[typography.body, { color: colors.text, fontWeight: '600' }]}>Últimas 3 semanas</Text>
+          <HabitHistoryGrid history={history} weekStartsOn={weekStartsOn} />
+        </View>
+
+        <HabitDetailBanner onPressStats={() => router.dismissTo('/progress')} />
+
+        <Pressable
+          style={[styles.reminderRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => router.push(`/habit/${id}/edit`)}
+        >
+          <Ionicons name="notifications-outline" size={20} color={colors.success} />
+          <Text style={[typography.body, { color: colors.text, flex: 1 }]}>Recordatorios</Text>
+          <Text style={[typography.caption, { color: colors.textMuted }]}>
+            {reminderTimesLabel || 'Sin recordatorios'}
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </Pressable>
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  statsCard: {
-    margin: spacing.md,
+  content: {
     padding: spacing.md,
-    borderRadius: radii.md,
-    borderWidth: 1,
     gap: spacing.md,
   },
-  statsHeader: {
-    flexDirection: 'row',
+  header: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
   },
-  iconBadge: {
-    width: 36,
-    height: 36,
+  avatar: {
+    width: 72,
+    height: 72,
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.xs,
   },
-  stats: {
+  scheduleRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  stat: {
     alignItems: 'center',
-    gap: 2,
+    gap: spacing.xs,
   },
-  deleteButton: {
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  section: {
+    gap: spacing.sm,
+  },
+  reminderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.lg,
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radii.lg,
+    padding: spacing.md,
   },
 });

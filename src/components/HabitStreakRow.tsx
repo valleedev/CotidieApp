@@ -12,8 +12,6 @@ export interface HabitStreakRowProps {
   weekStartsOn: Weekday;
 }
 
-const STREAK_COLOR = '#F97316';
-
 export function HabitStreakRow({ entry, weekStartsOn }: HabitStreakRowProps) {
   const colors = useThemeColors();
   const { habit, currentStreak, history } = entry;
@@ -49,7 +47,7 @@ export function HabitStreakRow({ entry, weekStartsOn }: HabitStreakRowProps) {
         </View>
       </View>
       <View style={styles.streak}>
-        <Ionicons name="flame" size={16} color={STREAK_COLOR} />
+        <Ionicons name="flame" size={16} color={colors.flame} />
         <View>
           <Text style={[typography.body, { color: colors.text, fontWeight: '700' }]}>
             {currentStreak}

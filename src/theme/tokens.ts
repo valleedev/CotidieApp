@@ -10,6 +10,12 @@ export const colors = {
     primary: '#3B82F6',
     success: '#22C55E',
     danger: '#EF4444',
+    flame: '#F97316',
+    flameMuted: 'rgba(249, 115, 22, 0.12)',
+    gold: '#CA8A04',
+    goldMuted: 'rgba(202, 138, 4, 0.12)',
+    historyPartial: '#86EFAC',
+    historyEmpty: '#E3E3E7',
   },
   dark: {
     background: '#0B0F1A',
@@ -25,6 +31,12 @@ export const colors = {
     successBorder: 'rgba(52, 211, 153, 0.35)',
     successPill: '#123326',
     danger: '#F87171',
+    flame: '#F97316',
+    flameMuted: 'rgba(249, 115, 22, 0.16)',
+    gold: '#EAB308',
+    goldMuted: 'rgba(234, 179, 8, 0.16)',
+    historyPartial: '#6EE7B7',
+    historyEmpty: '#2B3454',
   },
 } as const;
 

@@ -212,8 +212,13 @@ RAÍZ (decide según sesión)
 - Campos: nombre, icono/color, ¿qué días? (toggles + atajo "Diario"), veces al día (`targetPerDay`), recordatorios (lista con hora + etiqueta + añadir/borrar).
 - Validación: nombre no vacío, ≥1 día. Guarda local al instante (sync en segundo plano).
 
-**Detalle de hábito**
-- Racha actual / mejor, mini-calendario de días hechos, botón editar. Sin datos nuevos.
+**Detalle de hábito** (solo lectura — editar vive en ruta separada `habit/[id]/edit`)
+- Cabecera: avatar (icono/color del hábito), nombre, resumen de horario (días · horas de recordatorio · veces al día).
+- Dos tarjetas: racha actual (llama) y mejor racha (estrella), lado a lado.
+- "Últimas 3 semanas": grid de 7×3 días con 3 estados (Completo/Parcial/Sin hacer) derivados de `domain/history.ts`, más reciente arriba.
+- Banner motivacional con link a la pestaña Progreso.
+- Fila de recordatorios (hora(s) + chevron) que también navega a editar.
+- Sin datos nuevos: todo deriva de `domain/streaks.ts` y `domain/history.ts` ya existentes.
 
 **Auth (Bienvenida / Registro / Login)**
 - Pitch de una línea + crear cuenta / iniciar sesión. Errores inline.

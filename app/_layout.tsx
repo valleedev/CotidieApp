@@ -15,8 +15,8 @@ import { supabase } from '../src/lib/supabase';
 import { session$, authReady$ } from '../src/state/session$';
 
 // Colorea el chrome nativo (headers de los modales de hábito) con la paleta dark-navy —
-// sin esto, `habit/new`/`habit/[id]` (los únicos con headerShown: true) se ven con los
-// colores claros por defecto de React Navigation.
+// sin esto, `habit/new`/`habit/[id]`/`habit/[id]/edit` (los únicos con headerShown: true)
+// se ven con los colores claros por defecto de React Navigation.
 const navigationTheme = {
   ...DarkTheme,
   colors: {
@@ -74,6 +74,10 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="habit/[id]"
+                  options={{ presentation: 'modal', headerShown: true }}
+                />
+                <Stack.Screen
+                  name="habit/[id]/edit"
                   options={{ presentation: 'modal', headerShown: true }}
                 />
               </Stack.Protected>
