@@ -1,19 +1,25 @@
 export const colors = {
-  // NOTA: no usado activamente — la app es dark-only por ahora (ver useThemeColors.ts).
-  // Se conserva para un futuro toggle claro/oscuro sin rediseñar desde cero.
   light: {
     background: '#FFFFFF',
     surface: '#F5F5F7',
+    surfaceElevated: '#ECEDF2',
     text: '#111114',
     textMuted: '#6B6B72',
     border: '#E3E3E7',
     primary: '#3B82F6',
+    primaryMuted: 'rgba(59, 130, 246, 0.12)',
     success: '#22C55E',
+    successBackground: 'rgba(34, 197, 94, 0.12)',
+    successBorder: 'rgba(34, 197, 94, 0.35)',
+    successPill: '#DCFCE7',
     danger: '#EF4444',
+    dangerBackground: 'rgba(239, 68, 68, 0.12)',
     flame: '#F97316',
     flameMuted: 'rgba(249, 115, 22, 0.12)',
     gold: '#CA8A04',
     goldMuted: 'rgba(202, 138, 4, 0.12)',
+    purple: '#9333EA',
+    purpleMuted: 'rgba(147, 51, 234, 0.12)',
     historyPartial: '#86EFAC',
     historyEmpty: '#E3E3E7',
   },
@@ -120,6 +126,3 @@ export const typography = {
   },
 };
 
-export const gradients = {
-  primary: [colors.dark.primary, colors.dark.success] as [string, string],
-} as const;

@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { use$ } from '@legendapp/state/react';
@@ -14,6 +14,7 @@ import {
   refreshPermissionStatusAsync,
   requestPermissionAsync,
 } from '../../src/notifications/permissions';
+import { listScheduledSummaryAsync, scheduleTestNotificationAsync } from '../../src/notifications/debug';
 import { useSyncSummary, type SyncStatus } from '../../src/hooks/useSyncSummary';
 import { formatRelativeShort } from '../../src/lib/dates';
 import { useThemeColors } from '../../src/theme/useThemeColors';
@@ -73,6 +74,24 @@ export default function SettingsScreen() {
     } else {
       openOSNotificationSettingsAsync();
     }
+  }
+
+  async function handleSendTestNotification() {
+    try {
+      await scheduleTestNotificationAsync();
+      Alert.alert('Notificación de prueba enviada', 'Te llegará en 5 segundos. Puedes bajar la app para verla como una notificación real.');
+    } catch (error) {
+      Alert.alert('No se pudo enviar', String(error));
+    }
+  }
+
+  async function handleShowScheduled() {
+    const { count, entries } = await listScheduledSummaryAsync();
+    const body =
+      count === 0
+        ? 'No hay notificaciones programadas.'
+        : entries.map((e) => `• ${e.title} — ${e.description}`).join('\n');
+    Alert.alert(`Notificaciones programadas (${count})`, body);
   }
 
   const displayName = savedDisplayName.trim() || 'Usuario';
@@ -184,6 +203,22 @@ export default function SettingsScreen() {
                 backgroundColor: notificationsBackground,
               }}
               onPress={handleNotificationsPress}
+            />
+            <SettingsRow
+              icon="send"
+              iconColor={colors.primary}
+              iconBackgroundColor={colors.primaryMuted}
+              title="Enviar notificación de prueba"
+              subtitle="Llega en 5 segundos, sirve para confirmar que funcionan"
+              onPress={handleSendTestNotification}
+            />
+            <SettingsRow
+              icon="list"
+              iconColor={colors.primary}
+              iconBackgroundColor={colors.primaryMuted}
+              title="Ver notificaciones programadas"
+              subtitle={`${slotCount} programadas actualmente`}
+              onPress={handleShowScheduled}
             />
           </SettingsCard>
           {approachingLimit ? (

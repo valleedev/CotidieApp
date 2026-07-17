@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../theme/useThemeColors';
-import { spacing, radii, typography, gradients } from '../theme/tokens';
+import { spacing, radii, typography } from '../theme/tokens';
 
 export interface AuthActionRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -44,7 +44,7 @@ export function AuthActionRow({
     return (
       <Pressable onPress={onPress} style={styles.shape}>
         <LinearGradient
-          colors={gradients.primary}
+          colors={[colors.primary, colors.success]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientFill}

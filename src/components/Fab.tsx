@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { spacing, shadow, gradients } from '../theme/tokens';
+import { spacing, shadow } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { spring } from '../theme/motion';
 
@@ -35,7 +35,7 @@ export function Fab({ onPress, variant = 'floating', gradient = false, style }: 
         style={[styles.fab, variant === 'floating' ? styles.floating : null, shadow.fab, pressStyle, style]}
       >
         <LinearGradient
-          colors={gradients.primary}
+          colors={[colors.primary, colors.success]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientFill}

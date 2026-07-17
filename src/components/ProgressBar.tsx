@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { radii, gradients } from '../theme/tokens';
+import { radii } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { duration, easing } from '../theme/motion';
 
@@ -30,7 +30,7 @@ export function ProgressBar({ value, color, gradient = false }: ProgressBarProps
       {gradient ? (
         <Animated.View style={[styles.fill, styles.fillClip, widthStyle]}>
           <LinearGradient
-            colors={gradients.primary}
+            colors={[colors.primary, colors.success]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.gradientFill}

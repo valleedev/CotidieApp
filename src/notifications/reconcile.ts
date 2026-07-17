@@ -14,36 +14,40 @@ function readData(request: Notifications.NotificationRequest): { reminderId: str
 }
 
 export async function reconcile(): Promise<void> {
-  const permissionGranted = settings$.local.notificationPermissionStatus.get() === 'granted';
-  const requests = await Notifications.getAllScheduledNotificationsAsync();
-  const osScheduled: OsScheduledEntry[] = requests.map((request) => {
-    const { reminderId, signature } = readData(request);
-    return { identifier: request.identifier, reminderId, signature };
-  });
+  try {
+    const permissionGranted = settings$.local.notificationPermissionStatus.get() === 'granted';
+    const requests = await Notifications.getAllScheduledNotificationsAsync();
+    const osScheduled: OsScheduledEntry[] = requests.map((request) => {
+      const { reminderId, signature } = readData(request);
+      return { identifier: request.identifier, reminderId, signature };
+    });
 
-  const plan = planReconcile(reminders$.get(), habits$.get(), osScheduled, permissionGranted);
+    const plan = planReconcile(reminders$.get(), habits$.get(), osScheduled, permissionGranted);
 
-  if (plan.toCancel.length > 0) {
-    await cancelNotifications(plan.toCancel);
+    if (plan.toCancel.length > 0) {
+      await cancelNotifications(plan.toCancel);
+    }
+
+    for (const reminderId of plan.toSchedule) {
+      const reminder = reminders$[reminderId].get();
+      const habit = reminder ? habits$[reminder.habitId].get() : undefined;
+      // Con sync remoto (Fase 4), reminders$/habits$ pueden llegar en orden
+      // distinto al cascadeo local (p.ej. si un habit se borró entre el cálculo
+      // del plan y este loop, tras el `await cancelNotifications` de arriba).
+      // Si falta, el próximo disparo reactivo del watcher (habits$/reminders$
+      // cambiaron) vuelve a intentarlo.
+      if (!reminder || !habit) continue;
+      const resolvedDays = resolveReminderDays(reminder, habit);
+      const specs = buildTriggerSpecs(reminder, resolvedDays);
+      const signature = signatureOf(reminder, resolvedDays);
+      const newIds = await scheduleReminder(reminder, habit, specs, signature);
+      setLocalReminderSchedule(reminderId, newIds);
+    }
+
+    plan.toPurgeLocalSchedule.forEach(removeLocalReminderSchedule);
+  } catch (error) {
+    console.warn('[notifications] reconcile() falló:', error);
   }
-
-  for (const reminderId of plan.toSchedule) {
-    const reminder = reminders$[reminderId].get();
-    const habit = reminder ? habits$[reminder.habitId].get() : undefined;
-    // Con sync remoto (Fase 4), reminders$/habits$ pueden llegar en orden
-    // distinto al cascadeo local (p.ej. si un habit se borró entre el cálculo
-    // del plan y este loop, tras el `await cancelNotifications` de arriba).
-    // Si falta, el próximo disparo reactivo del watcher (habits$/reminders$
-    // cambiaron) vuelve a intentarlo.
-    if (!reminder || !habit) continue;
-    const resolvedDays = resolveReminderDays(reminder, habit);
-    const specs = buildTriggerSpecs(reminder, resolvedDays);
-    const signature = signatureOf(reminder, resolvedDays);
-    const newIds = await scheduleReminder(reminder, habit, specs, signature);
-    setLocalReminderSchedule(reminderId, newIds);
-  }
-
-  plan.toPurgeLocalSchedule.forEach(removeLocalReminderSchedule);
 }
 
 // Único mecanismo que dispara reconcile(): arranque de app (observe corre inmediato),

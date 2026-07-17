@@ -28,7 +28,7 @@ export async function scheduleReminder(
   specs: TriggerSpec[],
   signature: string
 ): Promise<string[]> {
-  return Promise.all(
+  const results = await Promise.all(
     specs.map((spec) =>
       Notifications.scheduleNotificationAsync({
         content: {
@@ -37,9 +37,13 @@ export async function scheduleReminder(
           data: { reminderId: reminder.id, signature },
         },
         trigger: toNativeTrigger(spec),
+      }).catch((error) => {
+        console.warn(`[notifications] fallo agendando reminder ${reminder.id}:`, error);
+        return null;
       })
     )
   );
+  return results.filter((id): id is string => id !== null);
 }
 
 export async function cancelNotifications(identifiers: string[]): Promise<void> {

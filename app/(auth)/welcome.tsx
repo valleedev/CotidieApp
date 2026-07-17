@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useThemeColors } from '../../src/theme/useThemeColors';
-import { spacing, radii, typography, gradients } from '../../src/theme/tokens';
+import { spacing, radii, typography } from '../../src/theme/tokens';
 import { AuthActionRow } from '../../src/components/AuthActionRow';
 
 export default function Welcome() {
@@ -17,7 +17,7 @@ export default function Welcome() {
 
         <View style={styles.brandRow}>
           <LinearGradient
-            colors={gradients.primary}
+            colors={[colors.primary, colors.success]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.logoMark}

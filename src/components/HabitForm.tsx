@@ -35,6 +35,17 @@ function reminderToDraft(reminder: Reminder): ReminderDraft {
   return { id: reminder.id, time: reminder.time, daysOfWeek: reminder.daysOfWeek, enabled: reminder.enabled };
 }
 
+function pad(n: number): string {
+  return n.toString().padStart(2, '0');
+}
+
+function currentTimeRounded(): string {
+  const now = new Date();
+  const minutes = Math.round(now.getMinutes() / 5) * 5;
+  const hours = (now.getHours() + Math.floor(minutes / 60)) % 24;
+  return `${pad(hours)}:${pad(minutes % 60)}`;
+}
+
 export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function HabitForm(
   { initial, initialReminders = [], submitLabel, onSubmit, onCanSubmitChange },
   ref
@@ -49,6 +60,7 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
   const [reminderDrafts, setReminderDrafts] = useState<ReminderDraft[]>(
     initialReminders.map(reminderToDraft)
   );
+  const [autoOpenIndex, setAutoOpenIndex] = useState<number | null>(null);
 
   const nameError = name.trim().length === 0;
   const daysError = daysOfWeek.length === 0;
@@ -73,7 +85,10 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     if (status === 'undetermined') {
       await requestPermissionAsync();
     }
-    setReminderDrafts((drafts) => [...drafts, { time: '08:00', daysOfWeek: null, enabled: true }]);
+    setReminderDrafts((drafts) => {
+      setAutoOpenIndex(drafts.length);
+      return [...drafts, { time: currentTimeRounded(), daysOfWeek: null, enabled: true }];
+    });
   }
 
   function updateReminderDraft(index: number, next: ReminderDraft) {
@@ -114,7 +129,11 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
             />
           </View>
           {name.length > 0 ? (
-            <Pressable onPress={() => setName('')} hitSlop={8} style={styles.clearButton}>
+            <Pressable
+              onPress={() => setName('')}
+              hitSlop={8}
+              style={[styles.clearButton, { backgroundColor: colors.surfaceElevated }]}
+            >
               <Ionicons name="close" size={14} color={colors.textMuted} />
             </Pressable>
           ) : null}
@@ -181,6 +200,8 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
             habitDaysOfWeek={daysOfWeek}
             onChange={(next) => updateReminderDraft(index, next)}
             onRemove={() => removeReminderDraft(index)}
+            autoOpenTimePicker={autoOpenIndex === index}
+            onAutoOpenHandled={() => setAutoOpenIndex(null)}
           />
         ))}
         <Pressable onPress={handleAddReminder} style={[styles.addReminderButton, { borderColor: colors.success }]}>
@@ -226,7 +247,6 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(138, 147, 172, 0.2)',
   },
   iconColorCard: {
     borderWidth: 1,
