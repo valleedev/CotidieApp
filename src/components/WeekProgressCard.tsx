@@ -35,14 +35,14 @@ export function WeekProgressCard({ weekly, weekStartsOn, now = new Date() }: Wee
             return (
               <View key={weekday} style={styles.dotColumn}>
                 <View
-                  style={[
-                    styles.dotOuter,
-                    day.isToday
-                      ? { borderWidth: 2, borderColor: colors.success }
-                      : { borderWidth: 0 },
-                  ]}
+                  style={[styles.dotOuter, day.isToday ? { backgroundColor: colors.success } : null]}
                 >
-                  <Text style={[typography.caption, { color: colors.textMuted }]}>
+                  <Text
+                    style={[
+                      typography.caption,
+                      { color: day.isToday ? colors.background : colors.textMuted },
+                    ]}
+                  >
                     {weekdayLetter(weekday)}
                   </Text>
                 </View>
@@ -69,7 +69,7 @@ export function WeekProgressCard({ weekly, weekStartsOn, now = new Date() }: Wee
         <Text style={[typography.title, { color: colors.text }]}>
           {weekly.completedCount} / {weekly.totalCount}
         </Text>
-        <ProgressBar value={ratio} />
+        <ProgressBar value={ratio} gradient />
       </View>
     </View>
   );

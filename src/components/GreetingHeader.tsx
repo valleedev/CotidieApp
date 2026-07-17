@@ -10,7 +10,7 @@ export interface GreetingHeaderProps {
 export function GreetingHeader({ displayName }: GreetingHeaderProps) {
   const colors = useThemeColors();
   const name = displayName.trim();
-  const greeting = name.length > 0 ? `¡Hola, ${name}! ☀️` : '¡Hola! ☀️';
+  const greeting = name.length > 0 ? `¡Hola, ${name}! 👋` : '¡Hola! 👋';
 
   return (
     <View style={styles.row}>
@@ -19,7 +19,7 @@ export function GreetingHeader({ displayName }: GreetingHeaderProps) {
         <Text style={[typography.body, { color: colors.textMuted }]}>Un día más, un paso más.</Text>
       </View>
       <View style={[styles.avatar, { backgroundColor: colors.surfaceElevated, borderColor: colors.primary }]}>
-        <Ionicons name="happy-outline" size={22} color={colors.primary} />
+        <Ionicons name="person-outline" size={22} color={colors.primary} />
       </View>
     </View>
   );

@@ -31,6 +31,7 @@ export interface CreateHabitInput {
   name: string;
   color: string;
   icon: string;
+  category: string;
   daysOfWeek: Weekday[];
   targetPerDay: number;
 }
@@ -45,6 +46,7 @@ export function createHabit(input: CreateHabitInput): Habit {
     name: input.name,
     color: input.color,
     icon: input.icon,
+    category: input.category,
     daysOfWeek: input.daysOfWeek,
     targetPerDay: input.targetPerDay,
     sortOrder,
@@ -58,7 +60,7 @@ export function createHabit(input: CreateHabitInput): Habit {
 
 export function updateHabit(
   id: ID,
-  patch: Partial<Pick<Habit, 'name' | 'color' | 'icon' | 'daysOfWeek' | 'targetPerDay'>>
+  patch: Partial<Pick<Habit, 'name' | 'color' | 'icon' | 'category' | 'daysOfWeek' | 'targetPerDay'>>
 ): void {
   habits$[id].assign({ ...patch, updatedAt: nowIso() });
 }

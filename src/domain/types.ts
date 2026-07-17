@@ -9,6 +9,7 @@ export interface Habit {
   name: string;
   color: string;
   icon: string;
+  category: string; // subtítulo libre (ej. "Reto de salud"); '' = sin categoría
   daysOfWeek: Weekday[]; // fuente única de verdad. Diario = los 7 días
   targetPerDay: number;
   sortOrder: number;

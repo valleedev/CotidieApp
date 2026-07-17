@@ -79,14 +79,19 @@ export default function TodayScreen() {
         ) : (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="clipboard-outline" size={18} color={colors.primary} />
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.surfaceElevated }]}>
+                <Ionicons name="clipboard-outline" size={16} color={colors.primary} />
+              </View>
               <Text style={[typography.body, { color: colors.text, fontWeight: '600', flex: 1 }]}>
                 Pendientes
               </Text>
               <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
                 <Text style={[typography.caption, { color: colors.text }]}>{pending.length}</Text>
               </View>
-              <Text style={[typography.caption, { color: colors.primary }]}>Ver todos {'>'}</Text>
+              <View style={styles.verTodosRow}>
+                <Text style={[typography.caption, { color: colors.primary }]}>Ver todos</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              </View>
             </View>
             {pending.map((entry) => (
               <HabitTodayCard
@@ -103,14 +108,19 @@ export default function TodayScreen() {
         {completed.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="checkmark-circle-outline" size={18} color={colors.success} />
+              <View style={[styles.sectionIconBadge, { backgroundColor: colors.successBackground }]}>
+                <Ionicons name="checkmark" size={16} color={colors.success} />
+              </View>
               <Text style={[typography.body, { color: colors.text, fontWeight: '600', flex: 1 }]}>
                 Completados
               </Text>
               <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
                 <Text style={[typography.caption, { color: colors.text }]}>{completed.length}</Text>
               </View>
-              <Text style={[typography.caption, { color: colors.primary }]}>Ver todos {'>'}</Text>
+              <View style={styles.verTodosRow}>
+                <Text style={[typography.caption, { color: colors.primary }]}>Ver todos</Text>
+                <Ionicons name="chevron-forward" size={14} color={colors.primary} />
+              </View>
             </View>
             {completed.map((entry) => (
               <HabitTodayCard
@@ -124,7 +134,7 @@ export default function TodayScreen() {
           </View>
         ) : null}
       </ScrollView>
-      <Fab onPress={() => router.push('/habit/new')} />
+      <Fab onPress={() => router.push('/habit/new')} gradient />
     </SafeAreaView>
   );
 }
@@ -146,6 +156,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: radii.full,
+  },
+  sectionIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: radii.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verTodosRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
   },
   banner: {
     padding: spacing.md,

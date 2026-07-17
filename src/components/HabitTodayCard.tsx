@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, radii, typography } from '../theme/tokens';
@@ -18,6 +19,7 @@ export interface HabitTodayCardProps {
 
 export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleReminder }: HabitTodayCardProps) {
   const colors = useThemeColors();
+  const [expanded, setExpanded] = useState(true);
   const { habit, count, target, currentStreak, reminders } = entry;
   const done = isDone(count, target);
   const hasReminders = reminders.length > 0;
@@ -33,27 +35,35 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
           <Ionicons name={habit.icon as never} size={20} color="#FFFFFF" />
         </View>
         <View style={styles.texts}>
-          <Text
-            style={[
-              typography.body,
-              { color: colors.text, textDecorationLine: done ? 'line-through' : 'none' },
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>
             {habit.name}
           </Text>
+          {habit.category ? (
+            <Text style={[typography.caption, { color: colors.textMuted }]} numberOfLines={1}>
+              {habit.category}
+            </Text>
+          ) : null}
         </View>
-        <StreakBadge current={currentStreak} color={habit.color} />
+        <StreakBadge current={currentStreak} />
         {done ? (
           <View style={[styles.doneCheck, { backgroundColor: colors.success }]}>
             <Ionicons name="checkmark" size={16} color={colors.background} />
           </View>
         ) : hasReminders ? (
-          <View style={[styles.countChip, { backgroundColor: colors.surfaceElevated }]}>
-            <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>
-              {count}/{target}
-            </Text>
-          </View>
+          <>
+            <View style={[styles.countChip, { backgroundColor: colors.surfaceElevated }]}>
+              <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>
+                {count}/{target}
+              </Text>
+            </View>
+            <Pressable onPress={() => setExpanded((e) => !e)} hitSlop={8}>
+              <Ionicons
+                name={expanded ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color={colors.textMuted}
+              />
+            </Pressable>
+          </>
         ) : (
           <CompletionControl
             target={target}
@@ -65,7 +75,7 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
         )}
       </View>
 
-      {hasReminders ? (
+      {hasReminders && expanded ? (
         <View style={[styles.remindersBlock, { backgroundColor: colors.surfaceElevated }]}>
           <Text style={[typography.caption, { color: colors.textMuted }]}>
             Registra tu {habit.name.toLowerCase()} de hoy
@@ -125,7 +135,7 @@ const styles = StyleSheet.create({
   iconBadge: {
     width: 36,
     height: 36,
-    borderRadius: radii.full,
+    borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
   },

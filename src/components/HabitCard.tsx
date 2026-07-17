@@ -15,7 +15,7 @@ export interface HabitCardProps {
 // las pantallas que necesitan marcar completado componen CompletionControl aparte.
 export function HabitCard({ habit, onPress, reminderSummary }: HabitCardProps) {
   const colors = useThemeColors();
-  const subtitle = `${formatDaysOfWeek(habit.daysOfWeek)}${reminderSummary ? ' · ' + reminderSummary : ''}`;
+  const subtitle = `${habit.category ? habit.category + ' · ' : ''}${formatDaysOfWeek(habit.daysOfWeek)}${reminderSummary ? ' · ' + reminderSummary : ''}`;
 
   return (
     <Pressable

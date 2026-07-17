@@ -7,6 +7,7 @@ interface HabitRow {
   name: string;
   color: string;
   icon: string;
+  category: string;
   days_of_week: number[];
   target_per_day: number;
   sort_order: number;
@@ -26,7 +27,8 @@ export const habitTransform = transformStringifyKeys<HabitRow, Habit>(
   'id',
   'name',
   'color',
-  'icon'
+  'icon',
+  'category'
 );
 
 interface CompletionRow {

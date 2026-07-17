@@ -23,6 +23,7 @@ function makeHabit(overrides: Partial<Habit>): Habit {
     name: 'Test habit',
     color: '#000000',
     icon: 'star',
+    category: '',
     daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
     targetPerDay: 1,
     sortOrder: 0,

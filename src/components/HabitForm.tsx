@@ -14,6 +14,7 @@ export interface HabitFormValues {
   name: string;
   color: string;
   icon: string;
+  category: string;
   daysOfWeek: Weekday[];
   targetPerDay: number;
 }
@@ -34,6 +35,7 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState(initial?.color ?? HABIT_COLORS[0]);
   const [icon, setIcon] = useState(initial?.icon ?? 'checkmark-circle');
+  const [category, setCategory] = useState(initial?.category ?? '');
   const [daysOfWeek, setDaysOfWeek] = useState<Weekday[]>(initial?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6]);
   const [targetPerDay, setTargetPerDay] = useState(initial?.targetPerDay ?? 1);
   const [reminderDrafts, setReminderDrafts] = useState<ReminderDraft[]>(
@@ -46,7 +48,10 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onSubmit({ name: name.trim(), color, icon, daysOfWeek, targetPerDay }, reminderDrafts);
+    onSubmit(
+      { name: name.trim(), color, icon, category: category.trim(), daysOfWeek, targetPerDay },
+      reminderDrafts
+    );
   }
 
   async function handleAddReminder() {
@@ -79,6 +84,17 @@ export function HabitForm({ initial, initialReminders = [], submitLabel, onSubmi
             typography.body,
             { color: colors.text, borderColor: nameError ? colors.danger : colors.border },
           ]}
+        />
+      </View>
+
+      <View style={styles.field}>
+        <Text style={[typography.caption, { color: colors.textMuted }]}>Categoría (opcional)</Text>
+        <TextInput
+          value={category}
+          onChangeText={setCategory}
+          placeholder="Ej. Reto de salud"
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, typography.body, { color: colors.text, borderColor: colors.border }]}
         />
       </View>
 

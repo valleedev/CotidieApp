@@ -94,6 +94,17 @@ export const radii = {
 
 export const typography = {
   title: { fontSize: 24, fontWeight: '700' as const },
+  hero: { fontSize: 34, fontWeight: '700' as const, lineHeight: 40 },
   body: { fontSize: 16, fontWeight: '400' as const },
   caption: { fontSize: 13, fontWeight: '400' as const },
+  eyebrow: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+  },
 };
+
+export const gradients = {
+  primary: [colors.dark.primary, colors.dark.success] as [string, string],
+} as const;

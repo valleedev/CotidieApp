@@ -17,6 +17,7 @@ const baseHabit: Habit = {
   name: 'Leer',
   color: '#000',
   icon: 'book',
+  category: '',
   daysOfWeek: [1, 3, 5],
   targetPerDay: 1,
   sortOrder: 0,

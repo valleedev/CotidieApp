@@ -5,19 +5,18 @@ import { useThemeColors } from '../theme/useThemeColors';
 
 export interface StreakBadgeProps {
   current: number;
-  color: string;
 }
 
 // Solo se muestra cuando hay algo que celebrar — sin racha, sin badge.
-export function StreakBadge({ current, color }: StreakBadgeProps) {
+export function StreakBadge({ current }: StreakBadgeProps) {
   const colors = useThemeColors();
 
   if (current === 0) return null;
 
   return (
     <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-      <Ionicons name="flame" size={14} color={color} />
-      <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>{current}</Text>
+      <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
+      <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>{current} días</Text>
     </View>
   );
 }
