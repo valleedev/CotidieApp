@@ -62,7 +62,7 @@ export default function RootLayout() {
         <StatusBar style="light" />
         {!authReady ? null : (
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <Stack screenOptions={{ headerShown: false }}>
+            <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
               <Stack.Protected guard={!session}>
                 <Stack.Screen name="(auth)" />
               </Stack.Protected>
@@ -70,15 +70,15 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="habit/new"
-                  options={{ presentation: 'modal', headerShown: true }}
+                  options={{ presentation: 'modal', headerShown: true, animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
                   name="habit/[id]"
-                  options={{ presentation: 'modal', headerShown: true }}
+                  options={{ presentation: 'modal', headerShown: true, animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
                   name="habit/[id]/edit"
-                  options={{ presentation: 'modal', headerShown: true }}
+                  options={{ presentation: 'modal', headerShown: true, animation: 'slide_from_bottom' }}
                 />
               </Stack.Protected>
             </Stack>

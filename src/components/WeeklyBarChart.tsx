@@ -1,6 +1,14 @@
+import { useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
+} from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration, easing } from '../theme/motion';
 import { weekOrder } from '../domain/scheduling';
 import { weekdayLetter } from '../lib/format';
 import type { HabitHistory } from '../domain/history';
@@ -36,18 +44,13 @@ export function WeeklyBarChart({ history, weekStartsOn, color }: WeeklyBarChartP
           ))}
         </View>
         <View style={styles.bars}>
-          {order.map((weekday) => {
+          {order.map((weekday, index) => {
             const day = week.find((d) => d.weekday === weekday);
             const ratio = day?.ratio ?? 0;
             return (
               <View key={weekday} style={styles.barColumn}>
                 <View style={styles.barTrack}>
-                  <View
-                    style={[
-                      styles.bar,
-                      { height: `${Math.max(0, Math.min(1, ratio)) * 100}%`, backgroundColor: color },
-                    ]}
-                  />
+                  <Bar ratio={Math.max(0, Math.min(1, ratio))} color={color} delay={index * 40} />
                 </View>
                 <Text style={[typography.caption, { color: colors.textMuted }]}>
                   {weekdayLetter(weekday)}
@@ -59,6 +62,22 @@ export function WeeklyBarChart({ history, weekStartsOn, color }: WeeklyBarChartP
       </View>
     </View>
   );
+}
+
+function Bar({ ratio, color, delay }: { ratio: number; color: string; delay: number }) {
+  const height = useSharedValue(0);
+
+  useEffect(() => {
+    height.value = withDelay(
+      delay,
+      withTiming(ratio * 100, { duration: duration.normal, easing: easing.decelerate })
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const style = useAnimatedStyle(() => ({ height: `${height.value}%` }));
+
+  return <Animated.View style={[styles.bar, style, { backgroundColor: color }]} />;
 }
 
 const styles = StyleSheet.create({

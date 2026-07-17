@@ -1,8 +1,10 @@
 import { Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { spacing, shadow, gradients } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { spring } from '../theme/motion';
 
 export interface FabProps {
   onPress: () => void;
@@ -11,14 +13,26 @@ export interface FabProps {
   style?: StyleProp<ViewStyle>;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function Fab({ onPress, variant = 'floating', gradient = false, style }: FabProps) {
   const colors = useThemeColors();
+  const scale = useSharedValue(1);
+  const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const onPressIn = () => {
+    scale.value = withSpring(0.9, spring.snappy);
+  };
+  const onPressOut = () => {
+    scale.value = withSpring(1, spring.snappy);
+  };
 
   if (gradient) {
     return (
-      <Pressable
+      <AnimatedPressable
         onPress={onPress}
-        style={[styles.fab, variant === 'floating' ? styles.floating : null, shadow.fab, style]}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        style={[styles.fab, variant === 'floating' ? styles.floating : null, shadow.fab, pressStyle, style]}
       >
         <LinearGradient
           colors={gradients.primary}
@@ -28,23 +42,26 @@ export function Fab({ onPress, variant = 'floating', gradient = false, style }: 
         >
           <Ionicons name="add" size={28} color={colors.background} />
         </LinearGradient>
-      </Pressable>
+      </AnimatedPressable>
     );
   }
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={onPress}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
       style={[
         styles.fab,
         variant === 'floating' ? styles.floating : null,
         { backgroundColor: colors.primary },
         shadow.fab,
+        pressStyle,
         style,
       ]}
     >
       <Ionicons name="add" size={28} color={colors.background} />
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 

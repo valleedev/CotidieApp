@@ -1,7 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration } from '../theme/motion';
 
 export interface StreakBadgeProps {
   current: number;
@@ -14,10 +16,14 @@ export function StreakBadge({ current }: StreakBadgeProps) {
   if (current === 0) return null;
 
   return (
-    <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Animated.View
+      entering={FadeIn.duration(duration.fast)}
+      exiting={FadeOut.duration(duration.fast)}
+      style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.border }]}
+    >
       <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
       <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>{current} días</Text>
-    </View>
+    </Animated.View>
   );
 }
 

@@ -1,7 +1,15 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { spacing, radii, HABIT_ICONS } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration, easing } from '../theme/motion';
 
 export interface IconPickerProps {
   value: string;
@@ -16,22 +24,60 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
       {HABIT_ICONS.map((icon) => {
         const selected = icon === value;
         return (
-          <Pressable
+          <IconSwatch
             key={icon}
+            icon={icon}
+            selected={selected}
             onPress={() => onChange(icon)}
-            style={[
-              styles.swatch,
-              {
-                backgroundColor: selected ? colors.primary : colors.surface,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            <Ionicons name={icon} size={20} color={selected ? colors.background : colors.text} />
-          </Pressable>
+            surfaceColor={colors.surface}
+            selectedColor={colors.primary}
+            borderColor={colors.border}
+            iconColor={colors.text}
+            selectedIconColor={colors.background}
+          />
         );
       })}
     </View>
+  );
+}
+
+interface IconSwatchProps {
+  icon: (typeof HABIT_ICONS)[number];
+  selected: boolean;
+  onPress: () => void;
+  surfaceColor: string;
+  selectedColor: string;
+  borderColor: string;
+  iconColor: string;
+  selectedIconColor: string;
+}
+
+function IconSwatch({
+  icon,
+  selected,
+  onPress,
+  surfaceColor,
+  selectedColor,
+  borderColor,
+  iconColor,
+  selectedIconColor,
+}: IconSwatchProps) {
+  const progress = useSharedValue(selected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(selected ? 1 : 0, { duration: duration.fast, easing: easing.standard });
+  }, [selected, progress]);
+
+  const swatchStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [surfaceColor, selectedColor]),
+  }));
+
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.swatch, { borderColor }, swatchStyle]}>
+        <Ionicons name={icon} size={20} color={selected ? selectedIconColor : iconColor} />
+      </Animated.View>
+    </Pressable>
   );
 }
 

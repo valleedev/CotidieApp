@@ -1,6 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useThemeColors } from '../theme/useThemeColors';
 import { spacing, radii, typography } from '../theme/tokens';
+import { duration } from '../theme/motion';
 
 export interface EmptyStateProps {
   title: string;
@@ -13,7 +15,7 @@ export function EmptyState({ title, description, actionLabel, onAction }: EmptyS
   const colors = useThemeColors();
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeIn.duration(duration.normal)} style={styles.container}>
       <Text style={[typography.title, { color: colors.text, textAlign: 'center' }]}>{title}</Text>
       {description ? (
         <Text style={[typography.body, styles.description, { color: colors.textMuted }]}>
@@ -30,7 +32,7 @@ export function EmptyState({ title, description, actionLabel, onAction }: EmptyS
           </Text>
         </Pressable>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 

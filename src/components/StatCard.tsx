@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration } from '../theme/motion';
 
 export interface StatCardProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -17,7 +19,10 @@ export function StatCard({ icon, iconColor, iconBg, value, label, subtitle, subt
   const colors = useThemeColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+    <Animated.View
+      entering={FadeIn.duration(duration.normal)}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+    >
       <View style={[styles.iconBadge, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={20} color={iconColor} />
       </View>
@@ -28,7 +33,7 @@ export function StatCard({ icon, iconColor, iconBg, value, label, subtitle, subt
           {subtitle}
         </Text>
       ) : null}
-    </View>
+    </Animated.View>
   );
 }
 

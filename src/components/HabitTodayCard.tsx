@@ -1,8 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  LinearTransition,
+  ZoomIn,
+  ZoomOut,
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration } from '../theme/motion';
 import { isDone } from '../domain/completion';
 import { formatDayPart } from '../lib/format';
 import { CompletionControl } from './CompletionControl';
@@ -17,6 +30,8 @@ export interface HabitTodayCardProps {
   onToggleReminder: (reminderId: ID) => void;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleReminder }: HabitTodayCardProps) {
   const colors = useThemeColors();
   const [expanded, setExpanded] = useState(true);
@@ -24,12 +39,22 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
   const done = isDone(count, target);
   const hasReminders = reminders.length > 0;
 
-  const cardStyle = done
-    ? { backgroundColor: colors.successBackground, borderColor: colors.successBorder }
-    : { backgroundColor: colors.surface, borderColor: colors.border };
+  const doneProgress = useSharedValue(done ? 1 : 0);
+  useEffect(() => {
+    doneProgress.value = withTiming(done ? 1 : 0, { duration: duration.normal });
+  }, [done, doneProgress]);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(doneProgress.value, [0, 1], [colors.surface, colors.successBackground]),
+    borderColor: interpolateColor(doneProgress.value, [0, 1], [colors.border, colors.successBorder]),
+  }));
 
   return (
-    <Pressable onPress={onPress} style={[styles.card, cardStyle]}>
+    <AnimatedPressable
+      onPress={onPress}
+      style={[styles.card, cardAnimatedStyle]}
+      layout={LinearTransition.duration(duration.normal)}
+    >
       <View style={styles.headerRow}>
         <View style={[styles.iconBadge, { backgroundColor: habit.color }]}>
           <Ionicons name={habit.icon as never} size={20} color="#FFFFFF" />
@@ -46,11 +71,16 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
         </View>
         <StreakBadge current={currentStreak} />
         {done ? (
-          <View style={[styles.doneCheck, { backgroundColor: colors.success }]}>
+          <Animated.View
+            key="done"
+            entering={ZoomIn}
+            exiting={ZoomOut}
+            style={[styles.doneCheck, { backgroundColor: colors.success }]}
+          >
             <Ionicons name="checkmark" size={16} color={colors.background} />
-          </View>
+          </Animated.View>
         ) : hasReminders ? (
-          <>
+          <Animated.View key="reminders" entering={ZoomIn} exiting={ZoomOut} style={styles.rightControls}>
             <View style={[styles.countChip, { backgroundColor: colors.surfaceElevated }]}>
               <Text style={[typography.caption, { color: colors.text, fontWeight: '600' }]}>
                 {count}/{target}
@@ -63,20 +93,26 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
                 color={colors.textMuted}
               />
             </Pressable>
-          </>
+          </Animated.View>
         ) : (
-          <CompletionControl
-            target={target}
-            count={count}
-            color={habit.color}
-            onTapEmpty={onToggleGeneric}
-            onTapFilled={onToggleGeneric}
-          />
+          <Animated.View key="control" entering={ZoomIn} exiting={ZoomOut}>
+            <CompletionControl
+              target={target}
+              count={count}
+              color={habit.color}
+              onTapEmpty={onToggleGeneric}
+              onTapFilled={onToggleGeneric}
+            />
+          </Animated.View>
         )}
       </View>
 
       {hasReminders && expanded ? (
-        <View style={[styles.remindersBlock, { backgroundColor: colors.surfaceElevated }]}>
+        <Animated.View
+          entering={FadeIn.duration(duration.fast)}
+          exiting={FadeOut.duration(duration.fast)}
+          style={[styles.remindersBlock, { backgroundColor: colors.surfaceElevated }]}
+        >
           <Text style={[typography.caption, { color: colors.textMuted }]}>
             Registra tu {habit.name.toLowerCase()} de hoy
           </Text>
@@ -107,16 +143,20 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
               </View>
             </Pressable>
           ))}
-        </View>
+        </Animated.View>
       ) : null}
 
       {done ? (
-        <View style={[styles.banner, { backgroundColor: colors.successPill }]}>
+        <Animated.View
+          entering={FadeInDown.duration(duration.normal)}
+          exiting={FadeOut.duration(duration.fast)}
+          style={[styles.banner, { backgroundColor: colors.successPill }]}
+        >
           <Ionicons name="checkmark-circle" size={16} color={colors.success} />
           <Text style={[typography.caption, { color: colors.success }]}>¡Muy bien! Hábito completado</Text>
-        </View>
+        </Animated.View>
       ) : null}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
@@ -142,6 +182,11 @@ const styles = StyleSheet.create({
   texts: {
     flex: 1,
     gap: 2,
+  },
+  rightControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   countChip: {
     paddingHorizontal: spacing.sm,

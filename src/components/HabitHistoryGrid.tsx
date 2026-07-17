@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
+import { duration } from '../theme/motion';
 import { weekOrder } from '../domain/scheduling';
 import { weekdayLetter } from '../lib/format';
 import type { HabitHistory, HistoryDay } from '../domain/history';
@@ -55,9 +57,10 @@ export function HabitHistoryGrid({ history, weekStartsOn }: HabitHistoryGridProp
             >
               {ROW_LABELS[i]}
             </Text>
-            {week.map((day) => (
+            {week.map((day, j) => (
               <View key={day.date} style={styles.cell}>
-                <View
+                <Animated.View
+                  entering={FadeIn.delay((i * 7 + j) * 15).duration(duration.normal)}
                   style={[
                     styles.dayCell,
                     { backgroundColor: cellColor(day), opacity: day.isFuture ? 0.4 : 1 },

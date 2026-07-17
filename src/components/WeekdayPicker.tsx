@@ -1,7 +1,15 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useThemeColors } from '../theme/useThemeColors';
 import { spacing, radii, typography } from '../theme/tokens';
+import { duration, easing } from '../theme/motion';
 import { weekOrder } from '../domain/scheduling';
 import type { Weekday } from '../domain/types';
 
@@ -39,21 +47,17 @@ export function WeekdayPicker({ value, onChange, showSummary = false }: WeekdayP
         {DISPLAY_ORDER.map((day) => {
           const selected = value.includes(day);
           return (
-            <Pressable
+            <DayChip
               key={day}
+              label={LABELS[day]}
+              selected={selected}
               onPress={() => toggleDay(day)}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: selected ? colors.primary : colors.surface,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <Text style={[typography.caption, { color: selected ? colors.background : colors.text }]}>
-                {LABELS[day]}
-              </Text>
-            </Pressable>
+              surfaceColor={colors.surface}
+              selectedColor={colors.primary}
+              borderColor={colors.border}
+              textColor={colors.text}
+              selectedTextColor={colors.background}
+            />
           );
         })}
       </View>
@@ -76,6 +80,49 @@ export function WeekdayPicker({ value, onChange, showSummary = false }: WeekdayP
         </Pressable>
       )}
     </View>
+  );
+}
+
+interface DayChipProps {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+  surfaceColor: string;
+  selectedColor: string;
+  borderColor: string;
+  textColor: string;
+  selectedTextColor: string;
+}
+
+function DayChip({
+  label,
+  selected,
+  onPress,
+  surfaceColor,
+  selectedColor,
+  borderColor,
+  textColor,
+  selectedTextColor,
+}: DayChipProps) {
+  const progress = useSharedValue(selected ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(selected ? 1 : 0, { duration: duration.fast, easing: easing.standard });
+  }, [selected, progress]);
+
+  const chipStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [surfaceColor, selectedColor]),
+  }));
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(progress.value, [0, 1], [textColor, selectedTextColor]),
+  }));
+
+  return (
+    <Pressable onPress={onPress}>
+      <Animated.View style={[styles.chip, { borderColor }, chipStyle]}>
+        <Animated.Text style={[typography.caption, labelStyle]}>{label}</Animated.Text>
+      </Animated.View>
+    </Pressable>
   );
 }
 
