@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { useThemeColors } from '../../src/theme/useThemeColors';
-import { spacing, radii, typography } from '../../src/theme/tokens';
+import { spacing, typography } from '../../src/theme/tokens';
+import { BrandMark } from '../../src/components/BrandMark';
+import { AuthTextField } from '../../src/components/AuthTextField';
+import { AuthSubmitButton } from '../../src/components/AuthSubmitButton';
 
 export default function SignUp() {
   const colors = useThemeColors();
@@ -34,13 +38,21 @@ export default function SignUp() {
   if (checkEmail) {
     return (
       <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[typography.title, { color: colors.text }]}>Revisa tu correo</Text>
-        <Text style={[typography.body, { color: colors.textMuted }]}>
-          Te enviamos un enlace de confirmación a {email}. Ábrelo para activar tu cuenta y volver a
-          iniciar sesión.
-        </Text>
-        <Pressable onPress={() => router.replace('/sign-in')}>
-          <Text style={[typography.caption, { color: colors.primary }]}>Ir a iniciar sesión</Text>
+        <View style={styles.checkEmailContent}>
+          <BrandMark icon="mail" size={64} iconSize={30} />
+          <Text style={[typography.title, styles.checkEmailTitle, { color: colors.text }]}>
+            Revisa tu correo
+          </Text>
+          <Text style={[typography.body, styles.checkEmailBody, { color: colors.textMuted }]}>
+            Te enviamos un enlace de confirmación a{' '}
+            <Text style={{ color: colors.text, fontWeight: '600' }}>{email}</Text>. Ábrelo para activar
+            tu cuenta y volver a iniciar sesión.
+          </Text>
+        </View>
+
+        <Pressable onPress={() => router.replace('/sign-in')} style={styles.footer}>
+          <Text style={{ color: colors.success, fontWeight: '700', fontSize: 16 }}>Ir a iniciar sesión</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.success} />
         </Pressable>
       </SafeAreaView>
     );
@@ -48,77 +60,76 @@ export default function SignUp() {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[typography.title, { color: colors.text }]}>Crear cuenta</Text>
-
-      <View style={styles.form}>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Correo"
-          placeholderTextColor={colors.textMuted}
-          autoCapitalize="none"
-          autoComplete="email"
-          keyboardType="email-address"
-          style={[styles.input, typography.body, { color: colors.text, borderColor: colors.border }]}
-        />
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Contraseña (mín. 6 caracteres)"
-          placeholderTextColor={colors.textMuted}
-          secureTextEntry
-          autoComplete="password-new"
-          style={[styles.input, typography.body, { color: colors.text, borderColor: colors.border }]}
-        />
-
-        {error ? <Text style={[typography.caption, { color: colors.danger }]}>{error}</Text> : null}
-
-        <Pressable
-          style={[styles.button, { backgroundColor: colors.primary, opacity: loading ? 0.6 : 1 }]}
-          onPress={handleSubmit}
-          disabled={loading || !email || password.length < 6}
+      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color={colors.background} />
-          ) : (
-            <Text style={[typography.body, styles.buttonText, { color: colors.background }]}>
-              Crear cuenta
+          <View style={styles.header}>
+            <Text style={[typography.eyebrow, { color: colors.textMuted }]}>Crea tu cuenta</Text>
+            <View style={styles.brandRow}>
+              <BrandMark />
+              <Text style={[typography.title, { color: colors.text }]}>Cotidie</Text>
+            </View>
+            <Text style={[typography.hero, { color: colors.text }]}>Crea tu{'\n'}cuenta</Text>
+            <Text style={[typography.body, styles.body, { color: colors.textMuted }]}>
+              Empieza a construir hábitos que se mantienen.
             </Text>
-          )}
-        </Pressable>
+          </View>
 
-        <Pressable onPress={() => router.push('/sign-in')}>
-          <Text style={[typography.caption, { color: colors.textMuted }]}>
-            ¿Ya tienes cuenta? Iniciar sesión
-          </Text>
-        </Pressable>
-      </View>
+          <View style={styles.form}>
+            <AuthTextField
+              icon="mail-outline"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="Correo"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+            />
+            <AuthTextField
+              icon="lock-closed-outline"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Contraseña (mín. 6 caracteres)"
+              secureTextEntry
+              autoComplete="password-new"
+            />
+
+            {error ? <Text style={[typography.caption, { color: colors.danger }]}>{error}</Text> : null}
+
+            <AuthSubmitButton
+              label="Crear cuenta"
+              onPress={handleSubmit}
+              loading={loading}
+              disabled={loading || !email || password.length < 6}
+            />
+          </View>
+
+          <Pressable onPress={() => router.push('/sign-in')} style={styles.footer}>
+            <Text style={[typography.body, { color: colors.textMuted }]}>
+              ¿Ya tienes cuenta?{' '}
+              <Text style={{ color: colors.success, fontWeight: '700' }}>Iniciar sesión</Text>
+            </Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.success} />
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: spacing.lg,
-    gap: spacing.lg,
-  },
-  form: {
-    gap: spacing.sm,
-  },
-  input: {
-    borderWidth: 1,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  button: {
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-    marginTop: spacing.xs,
-  },
-  buttonText: {
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  flex: { flex: 1 },
+  content: { flexGrow: 1, padding: spacing.lg, gap: spacing.lg, justifyContent: 'space-between' },
+  header: { gap: spacing.sm },
+  brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  body: { lineHeight: 22 },
+  form: { gap: spacing.sm },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, padding: spacing.lg },
+  checkEmailContent: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.lg },
+  checkEmailTitle: { textAlign: 'center' },
+  checkEmailBody: { textAlign: 'center', lineHeight: 22 },
 });

@@ -1,11 +1,11 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useThemeColors } from '../../src/theme/useThemeColors';
-import { spacing, radii, typography } from '../../src/theme/tokens';
+import { spacing, typography } from '../../src/theme/tokens';
 import { AuthActionRow } from '../../src/components/AuthActionRow';
+import { BrandMark } from '../../src/components/BrandMark';
 
 export default function Welcome() {
   const colors = useThemeColors();
@@ -16,14 +16,7 @@ export default function Welcome() {
         <Text style={[typography.eyebrow, { color: colors.textMuted }]}>Bienvenida</Text>
 
         <View style={styles.brandRow}>
-          <LinearGradient
-            colors={[colors.primary, colors.success]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.logoMark}
-          >
-            <Ionicons name="checkmark" size={24} color={colors.text} />
-          </LinearGradient>
+          <BrandMark />
           <Text style={[typography.title, { color: colors.text }]}>Cotidie</Text>
         </View>
 
@@ -81,13 +74,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoMark: {
-    width: 48,
-    height: 48,
-    borderRadius: radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   body: { lineHeight: 22 },
   actions: { gap: spacing.sm },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.xs },
