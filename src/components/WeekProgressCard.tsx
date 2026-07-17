@@ -84,7 +84,6 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   left: {
-    flex: 1,
     gap: spacing.sm,
   },
   right: {

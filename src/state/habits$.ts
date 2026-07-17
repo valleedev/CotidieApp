@@ -23,6 +23,7 @@ export const habits$ = observable<Record<string, Habit>>(
     fieldCreatedAt: 'created_at',
     fieldUpdatedAt: 'updated_at',
     transform: habitTransform,
+    initial: {},
     persist: { name: 'habits', plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')) },
   })
 );

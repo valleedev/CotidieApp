@@ -5,10 +5,17 @@ import { supabase } from '../lib/supabase';
 export const session$ = observable<Session | null>(null);
 export const authReady$ = observable(false);
 
-supabase.auth.getSession().then(({ data }) => {
-  session$.set(data.session);
-  authReady$.set(true);
-});
+supabase.auth
+  .getSession()
+  .then(({ data }) => {
+    session$.set(data.session);
+  })
+  .catch(() => {
+    session$.set(null);
+  })
+  .finally(() => {
+    authReady$.set(true);
+  });
 
 supabase.auth.onAuthStateChange((_event, session) => {
   session$.set(session);

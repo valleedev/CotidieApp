@@ -19,6 +19,7 @@ export const completions$ = observable<Record<string, Completion>>(
     changesSince: 'last-sync',
     fieldUpdatedAt: 'updated_at',
     transform: completionTransform,
+    initial: {},
     persist: {
       name: 'completions',
       plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),

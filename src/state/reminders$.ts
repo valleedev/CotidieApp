@@ -21,6 +21,7 @@ export const reminders$ = observable<Record<string, Reminder>>(
     changesSince: 'last-sync',
     fieldUpdatedAt: 'updated_at',
     transform: reminderTransform,
+    initial: {},
     persist: {
       name: 'reminders',
       plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),

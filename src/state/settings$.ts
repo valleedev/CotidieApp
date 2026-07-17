@@ -31,6 +31,20 @@ const defaultProfileRow: SettingsRow = {
   updated_at: nowIso(),
 };
 
+// `initial` NO pasa por `transform` (Legend-State lo aplica crudo al activar
+// el nodo) — si aquí fuera `defaultProfileRow` (shape snake_case de la fila),
+// `settings$.profile.displayName` leería `undefined` (la key real sería
+// `display_name`) hasta que el primer fetch real resuelva y transforme. Eso
+// crasheaba `GreetingHeader` (`displayName.trim()`) en cualquier sesión nueva
+// sin fetch todavía completado.
+const defaultProfile: Settings = {
+  userId: LOCAL_USER_ID,
+  weekStartsOn: 1,
+  theme: 'system',
+  displayName: '',
+  updatedAt: defaultProfileRow.updated_at,
+};
+
 export const settings$ = observable<SettingsState>({
   profile: synced<SettingsRow, Settings>({
     get: async () => {
@@ -50,7 +64,11 @@ export const settings$ = observable<SettingsState>({
     },
     transform: settingsTransform,
     waitFor: isSyncEnabled$,
-    initial: defaultProfileRow,
+    // El .d.ts de esta beta tipa `initial` como `SettingsRow` (el shape remoto),
+    // pero en runtime (`sync.js`, activateSyncedNode) lo aplica crudo al nodo sin
+    // pasar por `transform.load` — confirmado leyendo el fuente. El cast documenta
+    // ese mismatch conocido, no lo oculta a ciegas.
+    initial: defaultProfile as unknown as SettingsRow,
     persist: {
       name: 'settingsProfile',
       plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
