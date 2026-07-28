@@ -20,12 +20,14 @@ export interface TodayHabitEntry {
   target: number;
   currentStreak: number;
   reminders: ReminderStatus[]; // [] = hábito genérico, render CompletionControl normal
+  done: boolean;
 }
 
 export interface UseTodayResult {
   totalActive: number;
   pending: TodayHabitEntry[];
   completed: TodayHabitEntry[];
+  entries: TodayHabitEntry[]; // orden sortOrder, mezcla pending+completed
 }
 
 export function useToday(): UseTodayResult {
@@ -46,6 +48,7 @@ export function useToday(): UseTodayResult {
 
   const pending: TodayHabitEntry[] = [];
   const completed: TodayHabitEntry[] = [];
+  const entries: TodayHabitEntry[] = [];
 
   for (const habit of scheduledToday) {
     const activeReminders = activeRemindersOn(reminderList, habit, now.getDay() as Weekday);
@@ -60,16 +63,19 @@ export function useToday(): UseTodayResult {
         ? reminderStatuses.filter((r) => r.done).length
         : countCompletions(completionList, habit.id, today);
 
+    const done = isDone(count, target);
     const entry: TodayHabitEntry = {
       habit,
       count,
       target,
       currentStreak: currentStreak(habit, reminderList, completionList, now),
       reminders: reminderStatuses,
+      done,
     };
 
-    (isDone(count, target) ? completed : pending).push(entry);
+    (done ? completed : pending).push(entry);
+    entries.push(entry);
   }
 
-  return { totalActive: activeHabits.length, pending, completed };
+  return { totalActive: activeHabits.length, pending, completed, entries };
 }

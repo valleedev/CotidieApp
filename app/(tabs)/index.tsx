@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { use$ } from '@legendapp/state/react';
 import { useToday } from '../../src/hooks/useToday';
 import { useWeeklyProgress } from '../../src/hooks/useWeeklyProgress';
 import { GreetingHeader } from '../../src/components/GreetingHeader';
-import { WeekProgressCard } from '../../src/components/WeekProgressCard';
-import { HabitTodayCard } from '../../src/components/HabitTodayCard';
+import { TodayStatsRow } from '../../src/components/TodayStatsRow';
+import { HabitTimeline } from '../../src/components/HabitTimeline';
+import { CircularProgress } from '../../src/components/CircularProgress';
 import { EmptyState } from '../../src/components/EmptyState';
 import { Fab } from '../../src/components/Fab';
 import { addCompletion, undoOneCompletion } from '../../src/state/completions$';
@@ -38,11 +40,15 @@ function toggleReminder(entry: TodayHabitEntry, reminderId: string) {
 }
 
 export default function TodayScreen() {
-  const { totalActive, pending, completed } = useToday();
+  const { totalActive, pending, completed, entries } = useToday();
   const weekly = useWeeklyProgress();
-  const weekStartsOn = use$(settings$.profile.weekStartsOn);
   const displayName = use$(settings$.profile.displayName);
   const colors = useThemeColors();
+
+  const [activeHabitId, setActiveHabitId] = useState<string | null>(pending[0]?.habit.id ?? null);
+  useEffect(() => {
+    setActiveHabitId(pending[0]?.habit.id ?? null);
+  }, [pending[0]?.habit.id]);
 
   if (totalActive === 0) {
     return (
@@ -67,11 +73,19 @@ export default function TodayScreen() {
     );
   }
 
+  const bestCurrentStreak = Math.max(0, ...entries.map((e) => e.currentStreak));
+  const totalToday = pending.length + completed.length;
+  const completedRatio = totalToday > 0 ? completed.length / totalToday : 0;
+
   return (
     <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView contentContainerStyle={styles.container}>
         <GreetingHeader displayName={displayName} />
-        <WeekProgressCard weekly={weekly} weekStartsOn={weekStartsOn} />
+        <TodayStatsRow
+          currentStreak={bestCurrentStreak}
+          weeklyCompleted={weekly.completedCount}
+          weeklyTotal={weekly.totalCount}
+        />
 
         {pending.length === 0 ? (
           <View style={[styles.banner, { backgroundColor: colors.success }]}>
@@ -79,56 +93,29 @@ export default function TodayScreen() {
               ¡Listo por hoy!
             </Text>
           </View>
-        ) : (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: colors.surfaceElevated }]}>
-                <Ionicons name="clipboard-outline" size={16} color={colors.primary} />
-              </View>
-              <Text style={[typography.body, { color: colors.text, fontWeight: '600', flex: 1 }]}>
-                Pendientes
-              </Text>
-              <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
-                <Text style={[typography.caption, { color: colors.text }]}>{pending.length}</Text>
-              </View>
-            </View>
-            {pending.map((entry) => (
-              <HabitTodayCard
-                key={entry.habit.id}
-                entry={entry}
-                onPress={() => router.push(`/habit/${entry.habit.id}`)}
-                onToggleGeneric={() => toggleGeneric(entry)}
-                onToggleReminder={(reminderId) => toggleReminder(entry, reminderId)}
-              />
-            ))}
-          </View>
-        )}
-
-        {completed.length > 0 ? (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <View style={[styles.sectionIconBadge, { backgroundColor: colors.successBackground }]}>
-                <Ionicons name="checkmark" size={16} color={colors.success} />
-              </View>
-              <Text style={[typography.body, { color: colors.text, fontWeight: '600', flex: 1 }]}>
-                Completados
-              </Text>
-              <View style={[styles.countBadge, { backgroundColor: colors.surfaceElevated }]}>
-                <Text style={[typography.caption, { color: colors.text }]}>{completed.length}</Text>
-              </View>
-            </View>
-            {completed.map((entry) => (
-              <HabitTodayCard
-                key={entry.habit.id}
-                entry={entry}
-                onPress={() => router.push(`/habit/${entry.habit.id}`)}
-                onToggleGeneric={() => toggleGeneric(entry)}
-                onToggleReminder={(reminderId) => toggleReminder(entry, reminderId)}
-              />
-            ))}
-          </View>
         ) : null}
+
+        <HabitTimeline
+          entries={entries}
+          activeHabitId={activeHabitId}
+          onSetActive={(habitId) => setActiveHabitId(habitId)}
+          onToggleGeneric={(entry) => toggleGeneric(entry)}
+          onToggleReminder={(entry, reminderId) => toggleReminder(entry, reminderId)}
+          onPressDetail={(habitId) => router.push(`/habit/${habitId}`)}
+        />
       </ScrollView>
+
+      <Pressable
+        onPress={() => router.push('/(tabs)/progress')}
+        style={[styles.summaryPill, { backgroundColor: colors.surface, borderColor: colors.border }]}
+      >
+        <CircularProgress progress={completedRatio} size={28} strokeWidth={3} />
+        <Text style={[typography.body, { color: colors.text, flex: 1, fontWeight: '600' }]}>
+          {completed.length}/{totalToday} completados hoy
+        </Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </Pressable>
+
       <Fab onPress={() => router.push('/habit/new')} gradient />
     </SafeAreaView>
   );
@@ -137,31 +124,23 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: spacing.md,
+    paddingBottom: spacing.xl * 2,
     gap: spacing.lg,
-  },
-  section: {
-    gap: spacing.sm,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  countBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radii.full,
-  },
-  sectionIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: radii.full,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   banner: {
     padding: spacing.md,
     borderRadius: radii.md,
     alignItems: 'center',
+  },
+  summaryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginLeft: spacing.md,
+    marginRight: 88,
+    marginBottom: spacing.md,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radii.full,
   },
 });
