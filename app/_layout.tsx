@@ -73,7 +73,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="habit/new"
-                  options={{ presentation: 'modal', headerShown: true, animation: 'slide_from_bottom' }}
+                  options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }}
                 />
                 <Stack.Screen
                   name="habit/[id]"

@@ -32,6 +32,15 @@ cp android/app/build/outputs/apk/release/app-release.apk ../CotidieApp-preview.a
 
 `eas.json`/`eas build` quedan solo para builds de development client (iOS, que sí requiere Mac/EAS) o cuando se pida explícitamente un build cloud.
 
+**Límite de memoria obligatorio — evita congelar la máquina.** Ya pasó una vez: un `gradlew`/`expo run:android` con Gradle en paralelo por defecto (workers = nº de cores, 8 en esta máquina) más los daemons de Kotlin/Gradle saturó la RAM disponible (14GB totales, ~4-8GB libres normalmente) y congeló el sistema, obligando a apagarlo a la fuerza. `android/gradle.properties` está en `.gitignore` (se regenera con el prebuild) — por eso el límite hay que volver a ponerlo cada vez que la carpeta `android/` se regenere desde cero:
+
+```properties
+org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+org.gradle.workers.max=3
+```
+
+Antes de cualquier build nativo (`assembleRelease`, `assembleDebug`, `expo run:android`, etc.), verificar que `android/gradle.properties` tenga `org.gradle.workers.max=3` (o menos si la máquina tiene poca RAM libre en ese momento — chequear con `free -h` antes de lanzar). Si el archivo no existe todavía (prebuild recién generado), añadirlo primero.
+
 ### Pendiente manual del usuario (no automatizable desde este entorno)
 
 - Crear proyecto real en supabase.com, luego `npx supabase login` + `npx supabase link --project-ref <ref>` + `npx supabase db push` para aplicar `supabase/migrations/0001_init.sql`.

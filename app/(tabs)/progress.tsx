@@ -26,6 +26,7 @@ export default function Progress() {
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
+          logo
           title="Aún no tienes hábitos"
           actionLabel="Crear hábito"
           onAction={() => router.push('/habit/new')}

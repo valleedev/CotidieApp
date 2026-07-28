@@ -48,10 +48,13 @@ export default function TodayScreen() {
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
-          title="Crea tu primer hábito"
-          actionLabel="Crear hábito"
+          logo
+          title="No tienes hábitos para hoy"
+          description="Agrega tu primer hábito para empezar a construir tu racha."
+          actionLabel="Agregar Hábito"
           onAction={() => router.push('/habit/new')}
         />
+        <Fab onPress={() => router.push('/habit/new')} gradient />
       </SafeAreaView>
     );
   }

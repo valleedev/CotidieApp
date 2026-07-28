@@ -27,6 +27,7 @@ export default function HabitsScreen() {
     return (
       <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: colors.background }}>
         <EmptyState
+          logo
           title="Crea tu primer hábito"
           actionLabel="Crear hábito"
           onAction={() => router.push('/habit/new')}

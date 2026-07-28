@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
   swatch: {
     width: 40,
     height: 40,
-    borderRadius: radii.md,
+    borderRadius: radii.full,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',

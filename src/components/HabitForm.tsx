@@ -57,6 +57,9 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
   const [category, setCategory] = useState(initial?.category ?? '');
   const [daysOfWeek, setDaysOfWeek] = useState<Weekday[]>(initial?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6]);
   const [targetPerDay, setTargetPerDay] = useState(initial?.targetPerDay ?? 1);
+  const [tipo, setTipo] = useState<'boolean' | 'count'>(
+    initial && initial.targetPerDay > 1 ? 'count' : 'boolean'
+  );
   const [reminderDrafts, setReminderDrafts] = useState<ReminderDraft[]>(
     initialReminders.map(reminderToDraft)
   );
@@ -170,26 +173,64 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Veces al día</Text>
-        <View style={[styles.targetCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-          <Pressable
-            onPress={() => setTargetPerDay((t) => Math.max(1, t - 1))}
-            style={[styles.targetButton, { backgroundColor: colors.background }]}
-          >
-            <Ionicons name="remove" size={18} color={colors.text} />
-          </Pressable>
-          <View style={styles.targetCenter}>
-            <Text style={[typography.title, { color: colors.text }]}>{targetPerDay}</Text>
-            <Text style={[typography.caption, { color: colors.textMuted }]}>veces al día</Text>
-          </View>
-          <Pressable
-            onPress={() => setTargetPerDay((t) => Math.min(10, t + 1))}
-            style={[styles.targetButton, { backgroundColor: colors.successBackground }]}
-          >
-            <Ionicons name="add" size={18} color={colors.success} />
-          </Pressable>
+        <Text style={[typography.caption, { color: colors.textMuted }]}>Tipo</Text>
+        <View style={[styles.segmented, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {(
+            [
+              { key: 'boolean', label: 'Sí/No' },
+              { key: 'count', label: 'Cantidad' },
+            ] as const
+          ).map((option) => {
+            const selected = tipo === option.key;
+            return (
+              <Pressable
+                key={option.key}
+                onPress={() => {
+                  setTipo(option.key);
+                  if (option.key === 'boolean') setTargetPerDay(1);
+                }}
+                style={[
+                  styles.segment,
+                  selected ? { backgroundColor: colors.primary } : null,
+                ]}
+              >
+                <Text
+                  style={[
+                    typography.body,
+                    { color: selected ? colors.background : colors.textMuted, fontWeight: '600' },
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       </View>
+
+      {tipo === 'count' ? (
+        <View style={styles.field}>
+          <Text style={[typography.caption, { color: colors.textMuted }]}>Veces al día</Text>
+          <View style={[styles.targetCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <Pressable
+              onPress={() => setTargetPerDay((t) => Math.max(1, t - 1))}
+              style={[styles.targetButton, { backgroundColor: colors.background }]}
+            >
+              <Ionicons name="remove" size={18} color={colors.text} />
+            </Pressable>
+            <View style={styles.targetCenter}>
+              <Text style={[typography.title, { color: colors.text }]}>{targetPerDay}</Text>
+              <Text style={[typography.caption, { color: colors.textMuted }]}>veces al día</Text>
+            </View>
+            <Pressable
+              onPress={() => setTargetPerDay((t) => Math.min(10, t + 1))}
+              style={[styles.targetButton, { backgroundColor: colors.successBackground }]}
+            >
+              <Ionicons name="add" size={18} color={colors.success} />
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
 
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted }]}>Recordatorios</Text>
@@ -265,6 +306,20 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  segmented: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderRadius: radii.md,
+    padding: 4,
+    gap: 4,
+  },
+  segment: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.sm,
+    borderRadius: radii.sm,
   },
   targetCard: {
     flexDirection: 'row',
