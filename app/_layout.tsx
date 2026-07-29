@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -15,6 +15,11 @@ import { colors } from '../src/theme/tokens';
 import { useThemeMode } from '../src/theme/useThemeColors';
 import { supabase } from '../src/lib/supabase';
 import { session$, authReady$ } from '../src/state/session$';
+import { AnimatedSplash } from '../src/components/AnimatedSplash';
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const SPLASH_MIN_DURATION_MS = 900;
 
 export default function RootLayout() {
   const session = use$(session$);
@@ -60,9 +65,16 @@ export default function RootLayout() {
     };
   }, []);
 
+  const [splashDone, setSplashDone] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
   useEffect(() => {
-    if (authReady) SplashScreen.hide();
-  }, [authReady]);
+    const timer = setTimeout(() => setMinTimeElapsed(true), SPLASH_MIN_DURATION_MS);
+    SplashScreen.hideAsync();
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showApp = authReady && minTimeElapsed;
 
   return (
     <SafeAreaProvider>
@@ -91,6 +103,9 @@ export default function RootLayout() {
               </Stack.Protected>
             </Stack>
           </GestureHandlerRootView>
+        )}
+        {!splashDone && (
+          <AnimatedSplash visible={!showApp} onExitComplete={() => setSplashDone(true)} />
         )}
       </ThemeProvider>
     </SafeAreaProvider>
