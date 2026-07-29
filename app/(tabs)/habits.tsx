@@ -2,6 +2,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { Swipeable } from 'react-native-gesture-handler';
+import Animated, { FadeOutRight, LinearTransition } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { use$ } from '@legendapp/state/react';
 import { useActiveHabits } from '../../src/hooks/useHabits';
@@ -80,6 +81,10 @@ export default function HabitsScreen() {
     const subtitle = `${item.category || 'Sin categoría'} · ${formatDaysOfWeek(item.daysOfWeek)}${reminderSummary ? ` · ${reminderSummary}` : ''}`;
 
     return (
+      <Animated.View
+        exiting={FadeOutRight.duration(260)}
+        layout={LinearTransition.duration(200)}
+      >
       <Swipeable
         friction={2}
         renderRightActions={() => (
@@ -127,6 +132,7 @@ export default function HabitsScreen() {
           </Pressable>
         </View>
       </Swipeable>
+      </Animated.View>
     );
   }
 

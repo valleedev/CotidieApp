@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HabitSymbol } from './HabitSymbol';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -56,7 +57,7 @@ export function HabitTodayCard({ entry, onPress, onToggleGeneric, onToggleRemind
     >
       <View style={styles.headerRow}>
         <View style={[styles.iconBadge, { backgroundColor: habit.color }]}>
-          <Ionicons name={habit.icon as never} size={20} color="#FFFFFF" />
+          <HabitSymbol icon={habit.icon} size={20} color="#FFFFFF" />
         </View>
         <View style={styles.texts}>
           <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>

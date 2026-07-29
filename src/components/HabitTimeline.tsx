@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HabitSymbol } from './HabitSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn, ZoomOut } from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
@@ -112,7 +113,7 @@ function TimelineRow({
           >
             <Pressable onPress={onSetActive} style={styles.activeHeaderRow}>
               <View style={[styles.iconBadge, { backgroundColor: habit.color }]}>
-                <Ionicons name={habit.icon as never} size={16} color="#FFFFFF" />
+                <HabitSymbol icon={habit.icon} size={16} color="#FFFFFF" />
               </View>
               <View style={styles.texts}>
                 <Text style={[typography.body, { color: colors.text, fontWeight: '600' }]} numberOfLines={1}>

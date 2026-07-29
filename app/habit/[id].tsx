@@ -7,6 +7,7 @@ import { softDeleteHabit } from '../../src/state/habits$';
 import { weekOrder } from '../../src/domain/scheduling';
 import { weekdayLetter } from '../../src/lib/format';
 import { useThemeMode } from '../../src/theme/useThemeColors';
+import { HabitSymbol } from '../../src/components/HabitSymbol';
 import type { HistoryDay } from '../../src/domain/history';
 
 const screenColors = {
@@ -111,7 +112,7 @@ export default function HabitDetail() {
 
         <View style={{ alignItems: 'flex-start', flexDirection: 'row', gap: 14, marginTop: -7 }}>
           <View style={{ alignItems: 'center', backgroundColor: colors.iconBackground, borderRadius: 14, height: 54, justifyContent: 'center', width: 54 }}>
-            <Ionicons color={habit.color} name={habit.icon as never} size={25} />
+            <HabitSymbol color={habit.color} icon={habit.icon} size={25} />
           </View>
           <View style={{ flex: 1, gap: 2, paddingTop: 1 }}>
             <Text numberOfLines={1} style={{ color: colors.text, fontFamily: 'serif', fontSize: 29, lineHeight: 33 }}>{habit.name}</Text>

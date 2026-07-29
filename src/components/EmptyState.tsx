@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../theme/useThemeColors';
 import { spacing, radii, typography } from '../theme/tokens';
 import { duration } from '../theme/motion';
-import { BrandMark } from './BrandMark';
 
 export interface EmptyStateProps {
   title: string;
@@ -25,7 +24,15 @@ export function EmptyState({ title, description, logo, actionLabel, onAction }: 
           { backgroundColor: colors.surface, borderColor: colors.border },
         ]}
       >
-        {logo ? <BrandMark size={64} iconSize={28} /> : null}
+        {logo ? (
+          <View style={[styles.illustration, { backgroundColor: colors.successBackground, borderColor: colors.successBorder }]}>
+            <View style={[styles.illustrationCore, { backgroundColor: colors.flameMuted }]}>
+              <Ionicons name="leaf-outline" size={30} color={colors.success} />
+            </View>
+            <Ionicons name="sparkles" size={15} color={colors.flame} style={styles.sparkleTop} />
+            <Ionicons name="sparkles" size={11} color={colors.success} style={styles.sparkleBottom} />
+          </View>
+        ) : null}
         <Text style={[typography.title, { color: colors.text, textAlign: 'center' }]}>{title}</Text>
         {description ? (
           <Text style={[typography.caption, styles.description, { color: colors.textMuted }]}>
@@ -62,6 +69,23 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     gap: spacing.md,
   },
+  illustration: {
+    width: 92,
+    height: 92,
+    borderRadius: 32,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  illustrationCore: {
+    width: 58,
+    height: 58,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sparkleTop: { position: 'absolute', right: 11, top: 13 },
+  sparkleBottom: { position: 'absolute', bottom: 15, left: 12 },
   description: {
     textAlign: 'center',
   },

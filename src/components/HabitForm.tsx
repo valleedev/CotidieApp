@@ -1,11 +1,13 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { spacing, radii, typography, HABIT_COLORS } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { WeekdayPicker } from './WeekdayPicker';
 import { IconPicker } from './IconPicker';
 import { ReminderRow } from './ReminderRow';
+import { HabitSymbol } from './HabitSymbol';
 import type { Habit, Reminder, Weekday } from '../domain/types';
 import type { ReminderDraft } from '../domain/reminders';
 import { refreshPermissionStatusAsync, requestPermissionAsync } from '../notifications/permissions';
@@ -47,14 +49,23 @@ function currentTimeRounded(): string {
   return `${pad(hours)}:${pad(minutes % 60)}`;
 }
 
+function softColor(hex: string, alpha = 0.16): string {
+  const value = hex.replace('#', '');
+  const red = parseInt(value.slice(0, 2), 16);
+  const green = parseInt(value.slice(2, 4), 16);
+  const blue = parseInt(value.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function HabitForm(
   { initial, initialReminders = [], submitLabel, onSubmit, onCanSubmitChange, appearance = 'default' },
   ref
 ) {
   const colors = useThemeColors();
+  const isSheet = appearance === 'sheet';
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState(initial?.color ?? HABIT_COLORS[0]);
-  const [icon, setIcon] = useState(initial?.icon ?? 'checkmark-circle');
+  const [icon, setIcon] = useState(initial?.icon ?? 'book-outline');
   const [category, setCategory] = useState(initial?.category ?? '');
   const [daysOfWeek, setDaysOfWeek] = useState<Weekday[]>(initial?.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6]);
   const [targetPerDay, setTargetPerDay] = useState(initial?.targetPerDay ?? 1);
@@ -65,6 +76,8 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     initialReminders.map(reminderToDraft)
   );
   const [autoOpenIndex, setAutoOpenIndex] = useState<number | null>(null);
+  const badgeBackground = useSharedValue(isSheet ? softColor(initial?.color ?? HABIT_COLORS[0]) : initial?.color ?? HABIT_COLORS[0]);
+  const badgeScale = useSharedValue(1);
 
   const nameError = name.trim().length === 0;
   const daysError = daysOfWeek.length === 0;
@@ -103,7 +116,27 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     setReminderDrafts((drafts) => drafts.filter((_, i) => i !== index));
   }
 
-  const isSheet = appearance === 'sheet';
+  const badgeStyle = useAnimatedStyle(() => ({
+    backgroundColor: badgeBackground.value,
+    transform: [{ scale: badgeScale.value }],
+  }));
+
+  function animateBadge() {
+    badgeScale.value = withSequence(withTiming(0.88, { duration: 90 }), withSpring(1, { damping: 13, stiffness: 240 }));
+  }
+
+  function selectColor(nextColor: string) {
+    badgeBackground.value = withTiming(isSheet ? softColor(nextColor) : nextColor, { duration: 220 });
+    animateBadge();
+    setColor(nextColor);
+  }
+
+  function selectIcon(nextIcon: string) {
+    if (nextIcon === icon) return;
+    animateBadge();
+    setIcon(nextIcon);
+  }
+
   const sheetColors = isSheet
     ? { background: colors.background, surface: colors.surface, border: colors.border, primary: colors.primary, muted: colors.textMuted }
     : null;
@@ -115,12 +148,16 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
         <View
           style={[
             styles.nameCard,
-            { backgroundColor: colors.surface, borderColor: nameError ? colors.danger : colors.border },
+            isSheet
+              ? { backgroundColor: 'transparent', borderBottomColor: nameError ? colors.danger : colors.border, borderBottomWidth: 1, borderColor: 'transparent', borderRadius: 0, paddingHorizontal: 0 }
+              : { backgroundColor: colors.surface, borderColor: nameError ? colors.danger : colors.border },
           ]}
         >
-          <View style={[styles.iconBadge, { backgroundColor: color }]}>
-            <Ionicons name={icon as never} size={18} color="#FFFFFF" />
-          </View>
+          <Animated.View style={[styles.iconBadge, badgeStyle, isSheet ? { borderRadius: 14, height: 48, width: 48 } : null]}>
+            <Animated.View key={icon} entering={FadeIn.duration(160)}>
+              <HabitSymbol icon={icon} size={isSheet ? 23 : 18} color={isSheet ? color : '#FFFFFF'} />
+            </Animated.View>
+          </Animated.View>
           <View style={styles.nameTextBlock}>
             <TextInput
               value={name}
@@ -149,6 +186,18 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
         </View>
       </View>
 
+      {isSheet ? (
+        <View style={styles.field}>
+          <Text style={[typography.caption, { color: colors.textMuted, fontWeight: '700', letterSpacing: 1.1 }]}>ICONO</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {['book-outline', 'barbell-outline', 'leaf-outline', 'water-outline', 'walk-outline', 'restaurant-outline', 'pencil-outline', 'moon-outline', 'locate-outline', 'musical-notes-outline'].map((iconName) => {
+              const selected = icon === iconName;
+              return <Pressable key={iconName} onPress={() => selectIcon(iconName)} style={{ alignItems: 'center', backgroundColor: selected ? softColor(color) : colors.surface, borderColor: selected ? color : colors.border, borderRadius: 10, borderWidth: 1, height: 36, justifyContent: 'center', width: 36 }}><Ionicons color={selected ? color : colors.textMuted} name={iconName as never} size={19} /></Pressable>;
+            })}
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>COLOR</Text>
         <View style={[styles.iconColorCard, isSheet ? { backgroundColor: 'transparent', borderColor: 'transparent', padding: 0 } : { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -159,8 +208,8 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
               return (
                 <Pressable
                   key={c}
-                  onPress={() => setColor(c)}
-                  style={[styles.colorSwatch, { backgroundColor: c }]}
+                  onPress={() => selectColor(c)}
+                  style={[styles.colorSwatch, { backgroundColor: c }, isSheet ? { borderRadius: 10, height: 34, width: 34 } : null]}
                 >
                   {selected ? <Ionicons name="checkmark" size={18} color="#FFFFFF" /> : null}
                 </Pressable>
@@ -171,8 +220,15 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>DÍAS</Text>
-        <WeekdayPicker value={daysOfWeek} onChange={setDaysOfWeek} showSummary />
+        {isSheet ? (
+          <View style={styles.sheetFieldHeading}>
+            <Text style={[typography.caption, { color: colors.textMuted, fontWeight: '700', letterSpacing: 1.1 }]}>DÍAS</Text>
+            <Pressable onPress={() => setDaysOfWeek([0, 1, 2, 3, 4, 5, 6])} hitSlop={8}>
+              <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>Todos los días</Text>
+            </Pressable>
+          </View>
+        ) : <Text style={[typography.caption, { color: colors.textMuted }]}>DÍAS</Text>}
+        <WeekdayPicker appearance={isSheet ? 'sheet' : 'default'} hideShortcut={isSheet} value={daysOfWeek} onChange={setDaysOfWeek} showSummary={!isSheet} />
         {daysError ? (
           <Text style={[typography.caption, { color: colors.danger }]}>Elige al menos un día.</Text>
         ) : null}
@@ -180,7 +236,7 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
 
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>{isSheet ? 'CÓMO SE MARCA' : 'Tipo'}</Text>
-        <View style={[styles.segmented, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.segmented, isSheet ? styles.sheetSegmented : null, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {(
             [
               { key: 'boolean', label: isSheet ? 'Una vez' : 'Sí/No' },
@@ -197,13 +253,14 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
                 }}
                 style={[
                   styles.segment,
-                  selected ? { backgroundColor: colors.primary } : null,
+                  selected ? { backgroundColor: isSheet ? colors.background : colors.primary } : null,
+                  isSheet ? styles.sheetSegment : null,
                 ]}
               >
                 <Text
                   style={[
                     typography.body,
-                    { color: selected ? colors.background : colors.textMuted, fontWeight: '600' },
+                    { color: selected ? (isSheet ? colors.text : colors.background) : colors.textMuted, fontWeight: '600' },
                   ]}
                 >
                   {option.label}
@@ -249,11 +306,12 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
             onRemove={() => removeReminderDraft(index)}
             autoOpenTimePicker={autoOpenIndex === index}
             onAutoOpenHandled={() => setAutoOpenIndex(null)}
+            appearance={isSheet ? 'sheet' : 'default'}
           />
         ))}
-        <Pressable onPress={handleAddReminder} style={[styles.addReminderButton, { borderColor: colors.success }]}>
-          <Ionicons name="add-circle-outline" size={18} color={colors.success} />
-          <Text style={[typography.body, { color: colors.success }]}>{isSheet ? 'Otro recordatorio' : 'Añadir recordatorio'}</Text>
+        <Pressable onPress={handleAddReminder} style={[styles.addReminderButton, isSheet ? styles.sheetAddReminderButton : null, { borderColor: isSheet ? colors.border : colors.success }]}>
+          <Ionicons name={isSheet ? 'add' : 'add-circle-outline'} size={18} color={isSheet ? colors.textMuted : colors.success} />
+          <Text style={[typography.body, { color: isSheet ? colors.textMuted : colors.success, fontSize: isSheet ? 13 : 16, fontWeight: isSheet ? '600' : '400' }]}>{isSheet ? 'Otro recordatorio' : 'Añadir recordatorio'}</Text>
         </Pressable>
       </View>
       {isSheet ? (
@@ -272,6 +330,11 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: spacing.sm,
+  },
+  sheetFieldHeading: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   nameCard: {
     flexDirection: 'row',
@@ -325,12 +388,23 @@ const styles = StyleSheet.create({
     padding: 4,
     gap: 4,
   },
+  sheetSegmented: {
+    borderRadius: 14,
+    borderWidth: 0,
+    minHeight: 48,
+    padding: 4,
+  },
   segment: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
     borderRadius: radii.sm,
+  },
+  sheetSegment: {
+    borderRadius: 10,
+    minHeight: 40,
+    paddingVertical: 0,
   },
   targetCard: {
     flexDirection: 'row',
@@ -359,5 +433,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     borderRadius: radii.md,
     paddingVertical: spacing.sm,
+  },
+  sheetAddReminderButton: {
+    borderRadius: 14,
+    minHeight: 73,
+    paddingVertical: 0,
   },
 });

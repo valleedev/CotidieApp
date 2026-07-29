@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { use$ } from '@legendapp/state/react';
@@ -59,6 +60,10 @@ export default function RootLayout() {
     };
   }, []);
 
+  useEffect(() => {
+    if (authReady) SplashScreen.hide();
+  }, [authReady]);
+
   return (
     <SafeAreaProvider>
       <ThemeProvider value={navigationTheme}>
@@ -73,7 +78,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="habit/new"
-                  options={{ presentation: 'modal', headerShown: false, animation: 'slide_from_bottom' }}
+                  options={{ presentation: 'modal', headerShown: false, animation: 'fade' }}
                 />
                 <Stack.Screen
                   name="habit/[id]"

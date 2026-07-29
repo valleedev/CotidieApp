@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HabitSymbol } from './HabitSymbol';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { weekOrder } from '../domain/scheduling';
@@ -21,7 +22,7 @@ export function HabitStreakRow({ entry, weekStartsOn }: HabitStreakRowProps) {
   return (
     <Pressable style={styles.row} onPress={() => router.push(`/habit/${habit.id}`)}>
       <View style={[styles.iconBadge, { backgroundColor: habit.color + '33' }]}>
-        <Ionicons name={habit.icon as never} size={20} color={habit.color} />
+        <HabitSymbol icon={habit.icon} size={20} color={habit.color} />
       </View>
       <View style={styles.middle}>
         <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>

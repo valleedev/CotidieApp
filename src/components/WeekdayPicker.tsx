@@ -17,13 +17,15 @@ export interface WeekdayPickerProps {
   value: Weekday[];
   onChange: (days: Weekday[]) => void;
   showSummary?: boolean;
+  appearance?: 'default' | 'sheet';
+  hideShortcut?: boolean;
 }
 
 const ALL_DAYS: Weekday[] = [0, 1, 2, 3, 4, 5, 6];
 const DISPLAY_ORDER: Weekday[] = weekOrder(1); // Lunes primero, solo para render
 const LABELS: Record<Weekday, string> = { 0: 'D', 1: 'L', 2: 'M', 3: 'X', 4: 'J', 5: 'V', 6: 'S' };
 
-export function WeekdayPicker({ value, onChange, showSummary = false }: WeekdayPickerProps) {
+export function WeekdayPicker({ value, onChange, showSummary = false, appearance = 'default', hideShortcut = false }: WeekdayPickerProps) {
   const colors = useThemeColors();
   const isDaily = value.length === 7;
 
@@ -57,6 +59,7 @@ export function WeekdayPicker({ value, onChange, showSummary = false }: WeekdayP
               borderColor={colors.border}
               textColor={colors.text}
               selectedTextColor={colors.background}
+              appearance={appearance}
             />
           );
         })}
@@ -72,7 +75,7 @@ export function WeekdayPicker({ value, onChange, showSummary = false }: WeekdayP
             </Text>
           </Pressable>
         </View>
-      ) : (
+      ) : hideShortcut ? null : (
         <Pressable onPress={toggleDaily} style={styles.dailyShortcut}>
           <Text style={[typography.caption, { color: colors.primary }]}>
             {isDaily ? 'Quitar diario' : 'Diario'}
@@ -92,6 +95,7 @@ interface DayChipProps {
   borderColor: string;
   textColor: string;
   selectedTextColor: string;
+  appearance: 'default' | 'sheet';
 }
 
 function DayChip({
@@ -103,6 +107,7 @@ function DayChip({
   borderColor,
   textColor,
   selectedTextColor,
+  appearance,
 }: DayChipProps) {
   const progress = useSharedValue(selected ? 1 : 0);
 
@@ -119,7 +124,7 @@ function DayChip({
 
   return (
     <Pressable onPress={onPress}>
-      <Animated.View style={[styles.chip, { borderColor }, chipStyle]}>
+      <Animated.View style={[styles.chip, appearance === 'sheet' ? styles.sheetChip : null, { borderColor }, chipStyle]}>
         <Animated.Text style={[typography.caption, labelStyle]}>{label}</Animated.Text>
       </Animated.View>
     </Pressable>
@@ -141,6 +146,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  sheetChip: {
+    borderRadius: 12,
+    borderWidth: 0,
+    flex: 1,
+    height: 44,
   },
   dailyShortcut: {
     alignSelf: 'flex-start',

@@ -15,6 +15,7 @@ export interface ReminderRowProps {
   onRemove: () => void;
   autoOpenTimePicker?: boolean;
   onAutoOpenHandled?: () => void;
+  appearance?: 'default' | 'sheet';
 }
 
 export function ReminderRow({
@@ -24,10 +25,12 @@ export function ReminderRow({
   onRemove,
   autoOpenTimePicker,
   onAutoOpenHandled,
+  appearance = 'default',
 }: ReminderRowProps) {
   const colors = useThemeColors();
   const customDays = value.daysOfWeek !== null;
   const { icon, label } = describeReminderTime(value.time);
+  const isSheet = appearance === 'sheet';
 
   function toggleCustomDays() {
     onChange({ ...value, daysOfWeek: customDays ? null : habitDaysOfWeek });
@@ -41,7 +44,7 @@ export function ReminderRow({
   }
 
   return (
-    <View style={[styles.container, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+    <View style={[styles.container, isSheet ? styles.sheetContainer : null, { borderColor: colors.border, backgroundColor: colors.surface }]}>
       <View style={styles.row}>
         <View style={styles.timeLabel}>
           <TimePickerField
@@ -52,6 +55,7 @@ export function ReminderRow({
             label={label}
             autoOpen={autoOpenTimePicker}
             onAutoOpenHandled={onAutoOpenHandled}
+            compactSubtitle={isSheet ? `${label} · todos los días del hábito` : undefined}
           />
         </View>
         <Switch
@@ -59,12 +63,12 @@ export function ReminderRow({
           onValueChange={(enabled) => onChange({ ...value, enabled })}
           trackColor={{ true: colors.primary, false: colors.border }}
         />
-        <Pressable onPress={handleRemove} hitSlop={8}>
+        {!isSheet ? <Pressable onPress={handleRemove} hitSlop={8}>
           <Ionicons name="trash-outline" size={20} color={colors.danger} />
-        </Pressable>
+        </Pressable> : null}
       </View>
 
-      <View style={[styles.customDaysSection, { borderTopColor: colors.border }]}>
+      {!isSheet ? <View style={[styles.customDaysSection, { borderTopColor: colors.border }]}>
         <Pressable onPress={toggleCustomDays}>
           <Text style={[typography.caption, { color: colors.primary }]}>
             {customDays ? 'Personalizar días' : 'Todos los días del hábito'}
@@ -77,7 +81,7 @@ export function ReminderRow({
             onChange={(days) => onChange({ ...value, daysOfWeek: days })}
           />
         ) : null}
-      </View>
+      </View> : null}
     </View>
   );
 }
@@ -88,6 +92,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.md,
     gap: spacing.sm,
+  },
+  sheetContainer: {
+    borderRadius: 14,
+    borderWidth: 0,
+    minHeight: 68,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   row: {
     flexDirection: 'row',

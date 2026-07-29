@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HabitSymbol } from './HabitSymbol';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { spacing, radii, typography } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
@@ -37,7 +38,7 @@ export function HabitCard({ habit, onPress, reminderSummary, onReorderLongPress 
     >
       <View style={[styles.accentBar, { backgroundColor: habit.color }]} />
       <View style={[styles.iconBadge, { backgroundColor: habit.color + '33' }]}>
-        <Ionicons name={habit.icon as never} size={22} color={habit.color} />
+        <HabitSymbol icon={habit.icon} size={22} color={habit.color} />
       </View>
       <View style={styles.texts}>
         <Text style={[typography.body, { color: colors.text }]} numberOfLines={1}>

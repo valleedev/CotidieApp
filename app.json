@@ -13,7 +13,7 @@
     "android": {
       "package": "app.cotidie.mobile",
       "adaptiveIcon": {
-        "backgroundColor": "#00112F",
+        "backgroundColor": "#0F0F0E",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,16 +32,16 @@
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#00112F"
+          "color": "#F28B67"
         }
       ],
       [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 280,
           "resizeMode": "contain",
-          "backgroundColor": "#00112F"
+          "backgroundColor": "#0F0F0E"
         }
       ]
     ],

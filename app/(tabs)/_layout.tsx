@@ -16,13 +16,15 @@ const tabColors = {
   light: {
     background: '#FCFBF7',
     border: '#E2DED6',
-    active: '#B94A2D',
+    active: '#201E1A',
+    indicator: '#B94A2D',
     inactive: '#7B766E',
   },
   dark: {
     background: '#201F18',
     border: '#39372F',
-    active: '#E66B4A',
+    active: '#F8F4ED',
+    indicator: '#E66B4A',
     inactive: '#A7A297',
   },
 } as const;
@@ -45,7 +47,7 @@ function TabLabel({ name, focused }: { name: TabName; focused: boolean }) {
       </Text>
       <View
         style={{
-          backgroundColor: focused ? palette.active : 'transparent',
+          backgroundColor: focused ? palette.indicator : 'transparent',
           borderCurve: 'continuous',
           borderRadius: 999,
           height: 2,

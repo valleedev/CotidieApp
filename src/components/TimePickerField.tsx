@@ -14,6 +14,7 @@ export interface TimePickerFieldProps {
   label: string;
   autoOpen?: boolean;
   onAutoOpenHandled?: () => void;
+  compactSubtitle?: string;
 }
 
 function pad(n: number): string {
@@ -38,6 +39,7 @@ export function TimePickerField({
   label,
   autoOpen = false,
   onAutoOpenHandled,
+  compactSubtitle,
 }: TimePickerFieldProps) {
   const colors = useThemeColors();
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -72,10 +74,19 @@ export function TimePickerField({
 
   return (
     <>
-      <Pressable onPress={openPicker} style={styles.trigger} hitSlop={8}>
+      <Pressable onPress={openPicker} style={[styles.trigger, compactSubtitle ? styles.compactTrigger : null]} hitSlop={8}>
         <Ionicons name={icon} size={18} color={iconColor} />
-        <Text style={[typography.body, { color: colors.text }]}>{time}</Text>
-        <Text style={[typography.caption, { color: colors.textMuted }]}> · {label}</Text>
+        {compactSubtitle ? (
+          <View>
+            <Text style={[styles.compactTime, { color: colors.text }]}>{time}</Text>
+            <Text style={[typography.caption, { color: colors.textMuted }]}>{compactSubtitle}</Text>
+          </View>
+        ) : (
+          <>
+            <Text style={[typography.body, { color: colors.text }]}>{time}</Text>
+            <Text style={[typography.caption, { color: colors.textMuted }]}> · {label}</Text>
+          </>
+        )}
       </Pressable>
 
       {Platform.OS === 'ios' ? (
@@ -108,6 +119,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,
+  },
+  compactTrigger: {
+    gap: 12,
+  },
+  compactTime: {
+    fontFamily: 'serif',
+    fontSize: 20,
+    lineHeight: 23,
   },
   sheetContent: {
     padding: spacing.lg,

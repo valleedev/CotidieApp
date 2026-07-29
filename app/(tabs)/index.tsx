@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { Easing, FadeIn, FadeInDown, FadeOutUp, LinearTransition, ZoomIn, interpolateColor, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useToday, type TodayHabitEntry } from '../../src/hooks/useToday';
 import { addCompletion, undoOneCompletion } from '../../src/state/completions$';
 import { currentUserId } from '../../src/state/session$';
@@ -58,36 +60,106 @@ function entryStatus(entry: TodayHabitEntry) {
   return time ? `Pendiente · ${time}` : `Pendiente · ${entry.target} paso${entry.target === 1 ? '' : 's'}`;
 }
 
-function TimelineRow({ entry }: { entry: TodayHabitEntry }) {
+function CompletionButton({
+  completed,
+  onPress,
+  size,
+  iconSize,
+  colors,
+  accessibilityLabel,
+  showCheckWhenPending = false,
+}: {
+  completed: boolean;
+  onPress: () => void;
+  size: number;
+  iconSize: number;
+  colors: typeof screenColors.light | typeof screenColors.dark;
+  accessibilityLabel: string;
+  showCheckWhenPending?: boolean;
+}) {
+  const progress = useSharedValue(completed ? 1 : 0);
+
+  useEffect(() => {
+    progress.value = withTiming(completed ? 1 : 0, { duration: 220 });
+  }, [completed, progress]);
+
+  const controlStyle = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(progress.value, [0, 1], [colors.background, colors.complete]),
+    borderColor: interpolateColor(progress.value, [0, 1], [colors.accent, colors.complete]),
+    transform: [{ scale: 0.94 + progress.value * 0.06 }],
+  }));
+
+  return (
+    <Pressable accessibilityLabel={accessibilityLabel} hitSlop={10} onPress={onPress}>
+      <Animated.View
+        style={[
+          {
+            alignItems: 'center',
+            borderRadius: 999,
+            borderWidth: 2,
+            height: size,
+            justifyContent: 'center',
+            width: size,
+          },
+          controlStyle,
+        ]}
+      >
+        {completed || showCheckWhenPending ? (
+          <Animated.View entering={ZoomIn.duration(180)} key={completed ? 'done-check' : 'pending-check'}>
+            <Ionicons color={completed ? colors.background : colors.accent} name="checkmark" size={iconSize} />
+          </Animated.View>
+        ) : null}
+      </Animated.View>
+    </Pressable>
+  );
+}
+
+function PulsingAccentDot({ color }: { color: string }) {
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    const timing = { duration: 1350, easing: Easing.inOut(Easing.quad) };
+    scale.value = withRepeat(
+      withSequence(withTiming(1.24, timing), withTiming(1, timing)),
+      -1,
+      false
+    );
+  }, [scale]);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: 0.82 + (scale.value - 1) * 0.75,
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <View style={{ alignItems: 'center', height: 14, justifyContent: 'center', width: 14 }}>
+      <Animated.View style={[{ backgroundColor: color, borderRadius: 99, height: 12, width: 12 }, pulseStyle]} />
+    </View>
+  );
+}
+
+function TimelineRow({ entry, isLast }: { entry: TodayHabitEntry; isLast: boolean }) {
   const mode = useThemeMode();
   const colors = screenColors[mode];
   const completed = isDone(entry.count, entry.target);
 
   return (
-    <View style={{ flexDirection: 'row', minHeight: 70 }}>
+    <Animated.View layout={LinearTransition.duration(220)} style={{ flexDirection: 'row', minHeight: 70 }}>
       <View style={{ alignItems: 'center', width: 22 }}>
-        <Pressable
+        <CompletionButton
           accessibilityLabel={`${completed ? 'Desmarcar' : 'Marcar'} ${entry.habit.name}`}
-          hitSlop={10}
+          colors={colors}
+          completed={completed}
+          iconSize={14}
           onPress={() => toggle(entry)}
-          style={{
-            alignItems: 'center',
-            backgroundColor: completed ? colors.complete : colors.background,
-            borderColor: completed ? colors.complete : colors.accent,
-            borderRadius: 999,
-            borderWidth: 2,
-            height: 22,
-            justifyContent: 'center',
-            width: 22,
-          }}
-        >
-          {completed ? <Ionicons color={colors.background} name="checkmark" size={14} /> : null}
-        </Pressable>
-        <View style={{ backgroundColor: colors.divider, flex: 1, marginVertical: 3, width: 1 }} />
+          size={22}
+        />
+        {!isLast ? <View style={{ backgroundColor: colors.divider, flex: 1, marginVertical: 3, width: 1 }} /> : null}
       </View>
 
       <Pressable
-        onPress={() => router.push(`/habit/${entry.habit.id}`)}
+        accessibilityLabel={`${completed ? 'Desmarcar' : 'Marcar'} ${entry.habit.name}`}
+        onPress={() => toggle(entry)}
         style={{ flex: 1, flexDirection: 'row', gap: 12, paddingBottom: 15, paddingLeft: 12 }}
       >
         <View style={{ flex: 1, gap: 2 }}>
@@ -116,7 +188,7 @@ function TimelineRow({ entry }: { entry: TodayHabitEntry }) {
           }}
         />
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -128,8 +200,8 @@ export default function TodayScreen() {
   const doneCount = completed.length;
   const pendingCount = pending.length;
   const progress = scheduledTotal > 0 ? doneCount / scheduledTotal : 0;
+  const allDone = scheduledTotal > 0 && doneCount === scheduledTotal;
   const featured = pending[0] ?? entries[0];
-  const currentStreak = Math.max(0, ...entries.map((entry) => entry.currentStreak));
   const now = new Date();
   const dateLabel = `${WEEKDAYS[now.getDay()]} ${now.getDate()} DE ${MONTHS[now.getMonth()]}`;
 
@@ -150,7 +222,7 @@ export default function TodayScreen() {
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }}>
       <ScrollView
-        contentContainerStyle={{ gap: 22, paddingBottom: 20, paddingHorizontal: 20, paddingTop: 14 }}
+        contentContainerStyle={{ gap: 22, paddingBottom: 94, paddingHorizontal: 20, paddingTop: 14 }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
       >
@@ -166,14 +238,18 @@ export default function TodayScreen() {
           </View>
           <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 4 }}>
             <CircularProgress color={colors.complete} progress={progress} size={56} strokeWidth={4} trackColor={colors.progressTrack} />
-            <Text style={{ color: colors.text, fontSize: 17, fontVariant: ['tabular-nums'], fontWeight: '700', position: 'absolute' }}>
+            <Animated.Text entering={FadeIn.duration(160)} key={`${doneCount}-${scheduledTotal}`} style={{ color: colors.text, fontSize: 17, fontVariant: ['tabular-nums'], fontWeight: '700', position: 'absolute' }}>
               {doneCount}/{scheduledTotal}
-            </Text>
+            </Animated.Text>
           </View>
         </View>
 
         {featured ? (
-          <View
+          <Animated.View
+            entering={FadeInDown.duration(220)}
+            exiting={FadeOutUp.duration(180)}
+            key={featured.habit.id}
+            layout={LinearTransition.duration(220)}
             style={{
               alignItems: 'center',
               backgroundColor: colors.card,
@@ -184,28 +260,32 @@ export default function TodayScreen() {
               padding: 15,
             }}
           >
-            <View style={{ backgroundColor: featured.habit.color, borderRadius: 99, height: 14, width: 14 }} />
-            <Pressable onPress={() => router.push(`/habit/${featured.habit.id}`)} style={{ flex: 1, gap: 2 }}>
-              <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 1.1 }}>CUANDO QUIERAS</Text>
-              <Text style={{ color: colors.text, fontFamily: 'serif', fontSize: 25 }}>{featured.habit.name}</Text>
-            </Pressable>
-            <Pressable
-              accessibilityLabel={`${featured.done ? 'Desmarcar' : 'Marcar'} ${featured.habit.name}`}
-              hitSlop={8}
+            <PulsingAccentDot color={colors.accent} />
+            {allDone ? (
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text style={{ color: colors.complete, fontSize: 11, fontWeight: '800', letterSpacing: 1.1 }}>DÍA COMPLETADO</Text>
+                <Text style={{ color: colors.text, fontFamily: 'serif', fontSize: 25 }}>¡Has cumplido por hoy!</Text>
+              </View>
+            ) : (
+              <Pressable
+                accessibilityLabel={`${featured.done ? 'Desmarcar' : 'Marcar'} ${featured.habit.name}`}
+                onPress={() => toggle(featured)}
+                style={{ flex: 1, gap: 2 }}
+              >
+                <Text style={{ color: colors.accent, fontSize: 11, fontWeight: '800', letterSpacing: 1.1 }}>CUANDO QUIERAS</Text>
+                <Text style={{ color: colors.text, fontFamily: 'serif', fontSize: 25 }}>{featured.habit.name}</Text>
+              </Pressable>
+            )}
+            <CompletionButton
+              accessibilityLabel={allDone ? 'Todos los hábitos completados' : `${featured.done ? 'Desmarcar' : 'Marcar'} ${featured.habit.name}`}
+              colors={colors}
+              completed={allDone || featured.done}
+              iconSize={27}
               onPress={() => toggle(featured)}
-              style={{
-                alignItems: 'center',
-                borderColor: featured.done ? colors.complete : colors.accent,
-                borderRadius: 999,
-                borderWidth: 2,
-                height: 54,
-                justifyContent: 'center',
-                width: 54,
-              }}
-            >
-              <Ionicons color={featured.done ? colors.complete : colors.accent} name="checkmark" size={27} />
-            </Pressable>
-          </View>
+              showCheckWhenPending
+              size={54}
+            />
+          </Animated.View>
         ) : null}
 
         <View style={{ gap: 17 }}>
@@ -215,22 +295,29 @@ export default function TodayScreen() {
               {doneCount} hechos · {pendingCount} pendientes
             </Text>
           </View>
-          <View>{entries.map((entry) => <TimelineRow entry={entry} key={entry.habit.id} />)}</View>
+          <View>{entries.map((entry, index) => <TimelineRow entry={entry} isLast={index === entries.length - 1} key={entry.habit.id} />)}</View>
         </View>
 
-        <View style={{ alignItems: 'center', borderTopColor: colors.divider, borderTopWidth: 1, flexDirection: 'row', gap: 8, paddingTop: 16 }}>
-          <Ionicons color={colors.accent} name="flame-outline" size={17} />
-          <Text style={{ color: colors.muted, flex: 1, fontSize: 13 }}>{currentStreak} días seguidos</Text>
-          <Pressable
-            accessibilityLabel="Agregar hábito"
-            onPress={() => router.push('/habit/new')}
-            style={{ alignItems: 'center', backgroundColor: mode === 'dark' ? '#F8F4ED' : '#201E1A', borderRadius: 999, flexDirection: 'row', gap: 7, paddingHorizontal: 17, paddingVertical: 10 }}
-          >
-            <Ionicons color={mode === 'dark' ? '#201E1A' : '#F8F4ED'} name="add" size={18} />
-            <Text style={{ color: mode === 'dark' ? '#201E1A' : '#F8F4ED', fontSize: 14, fontWeight: '800' }}>Hábito</Text>
-          </Pressable>
-        </View>
       </ScrollView>
+      <Pressable
+        accessibilityLabel="Agregar hábito"
+        hitSlop={10}
+        onPress={() => router.push('/habit/new')}
+        style={{
+          alignItems: 'center',
+          backgroundColor: mode === 'dark' ? '#F8F4ED' : '#201E1A',
+          borderRadius: 999,
+          bottom: 18,
+          boxShadow: mode === 'dark' ? '0 6px 18px rgba(0, 0, 0, 0.26)' : '0 6px 18px rgba(32, 30, 26, 0.2)',
+          height: 58,
+          justifyContent: 'center',
+          position: 'absolute',
+          right: 20,
+          width: 58,
+        }}
+      >
+        <Ionicons color={mode === 'dark' ? '#201E1A' : '#F8F4ED'} name="add" size={29} />
+      </Pressable>
     </SafeAreaView>
   );
 }
