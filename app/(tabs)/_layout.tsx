@@ -1,70 +1,106 @@
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import type { ColorValue } from 'react-native';
-import { useThemeColors } from '../../src/theme/useThemeColors';
+import { Tabs } from 'expo-router';
+import { Text, View } from 'react-native';
+import { useThemeMode } from '../../src/theme/useThemeColors';
 
-const TAB_ICONS = {
-  index: { active: 'sunny', inactive: 'sunny-outline' },
-  habits: { active: 'checkbox', inactive: 'checkbox-outline' },
-  progress: { active: 'stats-chart', inactive: 'stats-chart-outline' },
-  settings: { active: 'settings', inactive: 'settings-outline' },
+const TAB_ITEMS = {
+  index: { label: 'Hoy', icon: 'calendar-outline' },
+  habits: { label: 'Hábitos', icon: 'list-outline' },
+  progress: { label: 'Progreso', icon: 'analytics-outline' },
+  settings: { label: 'Tú', icon: 'person-outline' },
 } as const;
 
-function TabIcon({
-  name,
-  focused,
-  color,
-}: {
-  name: keyof typeof TAB_ICONS;
-  focused: boolean;
-  color: ColorValue;
-}) {
-  const icon = focused ? TAB_ICONS[name].active : TAB_ICONS[name].inactive;
-  return <Ionicons name={icon as never} size={24} color={color} />;
+type TabName = keyof typeof TAB_ITEMS;
+
+const tabColors = {
+  light: {
+    background: '#FCFBF7',
+    border: '#E2DED6',
+    active: '#B94A2D',
+    inactive: '#7B766E',
+  },
+  dark: {
+    background: '#201F18',
+    border: '#39372F',
+    active: '#E66B4A',
+    inactive: '#A7A297',
+  },
+} as const;
+
+function TabLabel({ name, focused }: { name: TabName; focused: boolean }) {
+  const mode = useThemeMode();
+  const palette = tabColors[mode];
+
+  return (
+    <View style={{ alignItems: 'center', gap: 5 }}>
+      <Text
+        style={{
+          color: focused ? palette.active : palette.inactive,
+          fontSize: 11,
+          fontWeight: focused ? '700' : '400',
+          lineHeight: 13,
+        }}
+      >
+        {TAB_ITEMS[name].label}
+      </Text>
+      <View
+        style={{
+          backgroundColor: focused ? palette.active : 'transparent',
+          borderCurve: 'continuous',
+          borderRadius: 999,
+          height: 2,
+          width: 16,
+        }}
+      />
+    </View>
+  );
+}
+
+function TabIcon({ name, focused }: { name: TabName; focused: boolean }) {
+  const mode = useThemeMode();
+  const palette = tabColors[mode];
+
+  return <Ionicons color={focused ? palette.active : palette.inactive} name={TAB_ITEMS[name].icon} size={22} />;
 }
 
 export default function TabsLayout() {
-  const colors = useThemeColors();
+  const mode = useThemeMode();
+  const palette = tabColors[mode];
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         animation: 'fade',
-        tabBarShowLabel: true,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border, borderTopWidth: 1 },
+        tabBarActiveTintColor: palette.active,
+        tabBarInactiveTintColor: palette.inactive,
+        tabBarItemStyle: { paddingTop: 10 },
+        tabBarStyle: {
+          backgroundColor: palette.background,
+          borderCurve: 'continuous',
+          borderTopColor: palette.border,
+          borderTopLeftRadius: 34,
+          borderTopRightRadius: 34,
+          borderTopWidth: 1,
+          height: 96,
+          overflow: 'hidden',
+          paddingBottom: 12,
+          paddingTop: 2,
+        },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Hoy',
-          tabBarIcon: ({ focused, color }) => <TabIcon name="index" focused={focused} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="habits"
-        options={{
-          title: 'Hábitos',
-          tabBarIcon: ({ focused, color }) => <TabIcon name="habits" focused={focused} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="progress"
-        options={{
-          title: 'Progreso',
-          tabBarIcon: ({ focused, color }) => <TabIcon name="progress" focused={focused} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Ajustes',
-          tabBarIcon: ({ focused, color }) => <TabIcon name="settings" focused={focused} color={color} />,
-        }}
-      />
+      {(Object.keys(TAB_ITEMS) as TabName[]).map((name) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title: TAB_ITEMS[name].label,
+            tabBarAccessibilityLabel: TAB_ITEMS[name].label,
+            tabBarIcon: ({ focused }) => <TabIcon focused={focused} name={name} />,
+            tabBarLabel: ({ focused }) => <TabLabel focused={focused} name={name} />,
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

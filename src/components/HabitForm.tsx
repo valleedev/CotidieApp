@@ -29,6 +29,7 @@ export interface HabitFormProps {
   submitLabel: string;
   onSubmit: (values: HabitFormValues, reminderDrafts: ReminderDraft[]) => void;
   onCanSubmitChange?: (canSubmit: boolean) => void;
+  appearance?: 'default' | 'sheet';
 }
 
 function reminderToDraft(reminder: Reminder): ReminderDraft {
@@ -47,7 +48,7 @@ function currentTimeRounded(): string {
 }
 
 export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function HabitForm(
-  { initial, initialReminders = [], submitLabel, onSubmit, onCanSubmitChange },
+  { initial, initialReminders = [], submitLabel, onSubmit, onCanSubmitChange, appearance = 'default' },
   ref
 ) {
   const colors = useThemeColors();
@@ -102,10 +103,15 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     setReminderDrafts((drafts) => drafts.filter((_, i) => i !== index));
   }
 
+  const isSheet = appearance === 'sheet';
+  const sheetColors = isSheet
+    ? { background: colors.background, surface: colors.surface, border: colors.border, primary: colors.primary, muted: colors.textMuted }
+    : null;
+
   return (
-    <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={styles.container}>
+    <ScrollView style={{ backgroundColor: isSheet ? sheetColors?.background : colors.background }} contentContainerStyle={[styles.container, isSheet ? { gap: 16, paddingHorizontal: 21, paddingTop: 23 } : null]}>
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Nombre</Text>
+        {isSheet ? null : <Text style={[typography.caption, { color: colors.textMuted }]}>Nombre</Text>}
         <View
           style={[
             styles.nameCard,
@@ -144,9 +150,9 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Icono y color</Text>
-        <View style={[styles.iconColorCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <IconPicker value={icon} onChange={setIcon} />
+        <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>COLOR</Text>
+        <View style={[styles.iconColorCard, isSheet ? { backgroundColor: 'transparent', borderColor: 'transparent', padding: 0 } : { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {isSheet ? null : <IconPicker value={icon} onChange={setIcon} />}
           <View style={styles.colorRow}>
             {HABIT_COLORS.map((c) => {
               const selected = c === color;
@@ -165,7 +171,7 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>¿Qué días?</Text>
+        <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>DÍAS</Text>
         <WeekdayPicker value={daysOfWeek} onChange={setDaysOfWeek} showSummary />
         {daysError ? (
           <Text style={[typography.caption, { color: colors.danger }]}>Elige al menos un día.</Text>
@@ -173,12 +179,12 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Tipo</Text>
+        <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>{isSheet ? 'CÓMO SE MARCA' : 'Tipo'}</Text>
         <View style={[styles.segmented, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           {(
             [
-              { key: 'boolean', label: 'Sí/No' },
-              { key: 'count', label: 'Cantidad' },
+              { key: 'boolean', label: isSheet ? 'Una vez' : 'Sí/No' },
+              { key: 'count', label: isSheet ? 'Varias veces' : 'Cantidad' },
             ] as const
           ).map((option) => {
             const selected = tipo === option.key;
@@ -233,7 +239,7 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       ) : null}
 
       <View style={styles.field}>
-        <Text style={[typography.caption, { color: colors.textMuted }]}>Recordatorios</Text>
+        <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>RECORDATORIOS</Text>
         {reminderDrafts.map((draft, index) => (
           <ReminderRow
             key={draft.id ?? `new-${index}`}
@@ -247,9 +253,14 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
         ))}
         <Pressable onPress={handleAddReminder} style={[styles.addReminderButton, { borderColor: colors.success }]}>
           <Ionicons name="add-circle-outline" size={18} color={colors.success} />
-          <Text style={[typography.body, { color: colors.success }]}>Añadir recordatorio</Text>
+          <Text style={[typography.body, { color: colors.success }]}>{isSheet ? 'Otro recordatorio' : 'Añadir recordatorio'}</Text>
         </Pressable>
       </View>
+      {isSheet ? (
+        <Pressable onPress={handleSubmit} disabled={!canSubmit} style={{ alignItems: 'center', backgroundColor: canSubmit ? colors.text : colors.surface, borderRadius: 14, justifyContent: 'center', minHeight: 49, marginTop: 6 }}>
+          <Text style={{ color: canSubmit ? colors.background : colors.textMuted, fontSize: 14, fontWeight: '800' }}>{submitLabel}</Text>
+        </Pressable>
+      ) : null}
     </ScrollView>
   );
 });
