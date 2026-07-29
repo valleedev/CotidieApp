@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { router } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { HabitForm, type HabitFormHandle } from '../../src/components/HabitForm';
 import { createHabit } from '../../src/state/habits$';
 import { createReminder } from '../../src/state/reminders$';
@@ -13,15 +13,19 @@ export default function NewHabit() {
   const formRef = useRef<HabitFormHandle>(null);
   const isClosing = useRef(false);
   const [canSubmit, setCanSubmit] = useState(false);
-  const sheetOffset = useSharedValue(72);
+  const { height: screenHeight } = useWindowDimensions();
+  const sheetOffset = useSharedValue(screenHeight);
+  const overlayOpacity = useSharedValue(0);
   const mode = useThemeMode();
   const colors = mode === 'dark'
-    ? { overlay: '#100F0B', sheet: '#1D1D16', text: '#F3EFE8', muted: '#ABA498', border: '#413D33', button: '#F3EFE8' }
-    : { overlay: '#AAA69E', sheet: '#FCF9F5', text: '#26221E', muted: '#746D64', border: '#E3DCD3', button: '#201E1A' };
+    ? { overlay: 'rgba(16, 15, 11, 0.58)', sheet: '#1D1D16', text: '#F3EFE8', muted: '#ABA498', border: '#413D33', button: '#F3EFE8' }
+    : { overlay: 'rgba(38, 34, 30, 0.36)', sheet: '#FCF9F5', text: '#26221E', muted: '#746D64', border: '#E3DCD3', button: '#201E1A' };
+  const sheetAnimation = { duration: 320, easing: Easing.out(Easing.cubic) };
 
   useEffect(() => {
-    sheetOffset.value = withSpring(0, { damping: 22, stiffness: 240 });
-  }, [sheetOffset]);
+    sheetOffset.value = withTiming(0, sheetAnimation);
+    overlayOpacity.value = withTiming(1, { duration: 180 });
+  }, [overlayOpacity, sheetOffset]);
 
   function finishClose() {
     if (isClosing.current) return;
@@ -32,12 +36,14 @@ export default function NewHabit() {
   function closeSheet() {
     if (isClosing.current) return;
     isClosing.current = true;
-    sheetOffset.value = withTiming(760, { duration: 230 }, (finished) => {
+    overlayOpacity.value = withTiming(0, { duration: 180 });
+    sheetOffset.value = withTiming(screenHeight, { duration: 230 }, (finished) => {
       if (finished) runOnJS(router.back)();
     });
   }
 
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetOffset.value }] }));
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayOpacity.value }));
   const dismissGesture = Gesture.Pan()
     .activeOffsetY(8)
     .onUpdate((event) => {
@@ -45,16 +51,18 @@ export default function NewHabit() {
     })
     .onEnd((event) => {
       if (event.translationY > 118 || event.velocityY > 900) {
-        sheetOffset.value = withTiming(760, { duration: 230 }, (finished) => {
+        overlayOpacity.value = withTiming(0, { duration: 180 });
+        sheetOffset.value = withTiming(screenHeight, { duration: 230 }, (finished) => {
           if (finished) runOnJS(finishClose)();
         });
       } else {
-        sheetOffset.value = withSpring(0, { damping: 22, stiffness: 240 });
+        sheetOffset.value = withTiming(0, sheetAnimation);
       }
     });
 
   return (
-    <View style={{ backgroundColor: colors.overlay, flex: 1 }}>
+    <View style={{ flex: 1 }}>
+      <Animated.View pointerEvents="none" style={[{ backgroundColor: colors.overlay, bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }, overlayStyle]} />
       <Pressable accessibilityLabel="Cerrar nuevo hábito" onPress={closeSheet} style={{ bottom: 0, left: 0, position: 'absolute', right: 0, top: 0 }} />
       <Animated.View style={[{ backgroundColor: colors.sheet, borderTopLeftRadius: 28, borderTopRightRadius: 28, bottom: 0, left: 0, overflow: 'hidden', position: 'absolute', right: 0, top: 145 }, sheetStyle]}>
         <GestureDetector gesture={dismissGesture}>

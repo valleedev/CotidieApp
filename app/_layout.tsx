@@ -78,7 +78,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
                   name="habit/new"
-                  options={{ presentation: 'modal', headerShown: false, animation: 'fade' }}
+                  options={{ presentation: 'transparentModal', headerShown: false, animation: 'none' }}
                 />
                 <Stack.Screen
                   name="habit/[id]"
