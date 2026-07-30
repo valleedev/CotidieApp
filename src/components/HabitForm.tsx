@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View, type LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeIn, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeOutUp, LinearTransition, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
 import { spacing, radii, typography, HABIT_COLORS } from '../theme/tokens';
 import { useThemeColors } from '../theme/useThemeColors';
 import { WeekdayPicker } from './WeekdayPicker';
@@ -11,6 +11,33 @@ import { HabitSymbol } from './HabitSymbol';
 import type { Habit, Reminder, Weekday } from '../domain/types';
 import type { ReminderDraft } from '../domain/reminders';
 import { refreshPermissionStatusAsync, requestPermissionAsync } from '../notifications/permissions';
+
+const NEW_HABIT_ICONS = [
+  'book-outline',
+  'barbell-outline',
+  'leaf-outline',
+  'water-outline',
+  'walk-outline',
+  'restaurant-outline',
+  'pencil-outline',
+  'moon-outline',
+  'locate-outline',
+  'musical-notes-outline',
+  'bicycle-outline',
+  'heart-outline',
+  'sunny-outline',
+  'fitness-outline',
+  'cafe-outline',
+  'medkit-outline',
+  'alarm-outline',
+  'laptop-outline',
+  'brush-outline',
+  'school-outline',
+  'language-outline',
+  'people-outline',
+  'pulse-outline',
+  'bed-outline',
+] as const;
 
 export interface HabitFormValues {
   name: string;
@@ -76,8 +103,10 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     initialReminders.map(reminderToDraft)
   );
   const [autoOpenIndex, setAutoOpenIndex] = useState<number | null>(null);
+  const [segmentWidth, setSegmentWidth] = useState(0);
   const badgeBackground = useSharedValue(isSheet ? softColor(initial?.color ?? HABIT_COLORS[0]) : initial?.color ?? HABIT_COLORS[0]);
   const badgeScale = useSharedValue(1);
+  const segmentPosition = useSharedValue(tipo === 'count' ? 1 : 0);
 
   const nameError = name.trim().length === 0;
   const daysError = daysOfWeek.length === 0;
@@ -96,6 +125,14 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
   useEffect(() => {
     onCanSubmitChange?.(canSubmit);
   }, [canSubmit, onCanSubmitChange]);
+
+  useEffect(() => {
+    segmentPosition.value = withSpring(tipo === 'count' ? 1 : 0, {
+      damping: 18,
+      mass: 0.65,
+      stiffness: 210,
+    });
+  }, [segmentPosition, tipo]);
 
   async function handleAddReminder() {
     const status = await refreshPermissionStatusAsync();
@@ -120,6 +157,13 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
     backgroundColor: badgeBackground.value,
     transform: [{ scale: badgeScale.value }],
   }));
+  const segmentIndicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: segmentPosition.value * (segmentWidth + 4) }],
+  }));
+
+  function measureSegmented(event: LayoutChangeEvent) {
+    setSegmentWidth((event.nativeEvent.layout.width - 12) / 2);
+  }
 
   function animateBadge() {
     badgeScale.value = withSequence(withTiming(0.88, { duration: 90 }), withSpring(1, { damping: 13, stiffness: 240 }));
@@ -190,9 +234,9 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
         <View style={styles.field}>
           <Text style={[typography.caption, { color: colors.textMuted, fontWeight: '700', letterSpacing: 1.1 }]}>ICONO</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {['book-outline', 'barbell-outline', 'leaf-outline', 'water-outline', 'walk-outline', 'restaurant-outline', 'pencil-outline', 'moon-outline', 'locate-outline', 'musical-notes-outline'].map((iconName) => {
+            {NEW_HABIT_ICONS.map((iconName) => {
               const selected = icon === iconName;
-              return <Pressable key={iconName} onPress={() => selectIcon(iconName)} style={{ alignItems: 'center', backgroundColor: selected ? softColor(color) : colors.surface, borderColor: selected ? color : colors.border, borderRadius: 10, borderWidth: 1, height: 36, justifyContent: 'center', width: 36 }}><Ionicons color={selected ? color : colors.textMuted} name={iconName as never} size={19} /></Pressable>;
+              return <Pressable accessibilityLabel={`Seleccionar icono ${iconName}`} accessibilityRole="button" accessibilityState={{ selected }} key={iconName} onPress={() => selectIcon(iconName)} style={{ alignItems: 'center', backgroundColor: selected ? softColor(color) : colors.surface, borderColor: selected ? color : colors.border, borderRadius: 10, borderWidth: 1, height: 36, justifyContent: 'center', width: 36 }}><Ionicons color={selected ? color : colors.textMuted} name={iconName} size={19} /></Pressable>;
             })}
           </View>
         </View>
@@ -236,7 +280,24 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
 
       <View style={styles.field}>
         <Text style={[typography.caption, { color: colors.textMuted, fontWeight: isSheet ? '700' : '400', letterSpacing: isSheet ? 1.1 : 0 }]}>{isSheet ? 'CÓMO SE MARCA' : 'Tipo'}</Text>
-        <View style={[styles.segmented, isSheet ? styles.sheetSegmented : null, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          onLayout={measureSegmented}
+          style={[styles.segmented, isSheet ? styles.sheetSegmented : null, { backgroundColor: colors.surface, borderColor: colors.border }]}
+        >
+          {segmentWidth > 0 ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.segmentIndicator,
+                isSheet ? styles.sheetSegmentIndicator : null,
+                {
+                  backgroundColor: isSheet ? colors.background : colors.primary,
+                  width: segmentWidth,
+                },
+                segmentIndicatorStyle,
+              ]}
+            />
+          ) : null}
           {(
             [
               { key: 'boolean', label: isSheet ? 'Una vez' : 'Sí/No' },
@@ -253,7 +314,6 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
                 }}
                 style={[
                   styles.segment,
-                  selected ? { backgroundColor: isSheet ? colors.background : colors.primary } : null,
                   isSheet ? styles.sheetSegment : null,
                 ]}
               >
@@ -272,7 +332,12 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
       </View>
 
       {tipo === 'count' ? (
-        <View style={styles.field}>
+        <Animated.View
+          entering={FadeInDown.duration(220)}
+          exiting={FadeOutUp.duration(170)}
+          layout={LinearTransition.duration(220)}
+          style={styles.field}
+        >
           <Text style={[typography.caption, { color: colors.textMuted }]}>Veces al día</Text>
           <View style={[styles.targetCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
             <Pressable
@@ -292,7 +357,7 @@ export const HabitForm = forwardRef<HabitFormHandle, HabitFormProps>(function Ha
               <Ionicons name="add" size={18} color={colors.success} />
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       ) : null}
 
       <View style={styles.field}>
@@ -395,6 +460,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   segment: {
+    zIndex: 1,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -405,6 +471,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     minHeight: 40,
     paddingVertical: 0,
+  },
+  segmentIndicator: {
+    bottom: 4,
+    left: 4,
+    position: 'absolute',
+    top: 4,
+    borderRadius: radii.sm,
+  },
+  sheetSegmentIndicator: {
+    borderRadius: 10,
   },
   targetCard: {
     flexDirection: 'row',

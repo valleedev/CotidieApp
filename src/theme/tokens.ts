@@ -29,11 +29,11 @@ export const shadow = {
 } as const;
 
 export const HABIT_COLORS = [
+  '#526F9E',
   '#B84D2A',
   '#B37B24',
   '#70833D',
   '#3E7166',
-  '#526F9E',
   '#7B5D91',
   '#AD4F6B',
   '#827160',

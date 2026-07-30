@@ -75,6 +75,7 @@ function CompletionButton({
   iconSize,
   colors,
   accessibilityLabel,
+  disabled = false,
   showCheckWhenPending = false,
 }: {
   completed: boolean;
@@ -83,6 +84,7 @@ function CompletionButton({
   iconSize: number;
   colors: typeof screenColors.light | typeof screenColors.dark;
   accessibilityLabel: string;
+  disabled?: boolean;
   showCheckWhenPending?: boolean;
 }) {
   const progress = useSharedValue(completed ? 1 : 0);
@@ -98,7 +100,14 @@ function CompletionButton({
   }));
 
   return (
-    <Pressable accessibilityLabel={accessibilityLabel} hitSlop={10} onPress={onPress}>
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      hitSlop={disabled ? 0 : 10}
+      onPress={onPress}
+    >
       <Animated.View
         style={[
           {
@@ -297,6 +306,7 @@ export default function TodayScreen() {
               accessibilityLabel={allDone ? 'Todos los hábitos completados' : `${featured.done ? 'Desmarcar' : 'Marcar'} ${featured.habit.name}`}
               colors={colors}
               completed={allDone || featured.done}
+              disabled={allDone}
               iconSize={27}
               onPress={() => toggle(featured)}
               showCheckWhenPending

@@ -94,7 +94,7 @@ export default function RootLayout() {
                 />
                 <Stack.Screen
                   name="habit/[id]/edit"
-                  options={{ presentation: 'modal', headerShown: true, animation: 'slide_from_bottom' }}
+                  options={{ presentation: 'transparentModal', headerShown: false, animation: 'none' }}
                 />
               </Stack.Protected>
             </Stack>

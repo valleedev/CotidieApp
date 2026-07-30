@@ -55,7 +55,7 @@ export function WeekdayPicker({ value, onChange, showSummary = false, appearance
               selected={selected}
               onPress={() => toggleDay(day)}
               surfaceColor={colors.surface}
-              selectedColor={colors.primary}
+              selectedColor={appearance === 'sheet' ? colors.text : colors.primary}
               borderColor={colors.border}
               textColor={colors.text}
               selectedTextColor={colors.background}

@@ -16,6 +16,7 @@ export interface ReminderRowProps {
   autoOpenTimePicker?: boolean;
   onAutoOpenHandled?: () => void;
   appearance?: 'default' | 'sheet';
+  showRemoveInSheet?: boolean;
 }
 
 export function ReminderRow({
@@ -26,6 +27,7 @@ export function ReminderRow({
   autoOpenTimePicker,
   onAutoOpenHandled,
   appearance = 'default',
+  showRemoveInSheet = false,
 }: ReminderRowProps) {
   const colors = useThemeColors();
   const customDays = value.daysOfWeek !== null;
@@ -63,7 +65,7 @@ export function ReminderRow({
           onValueChange={(enabled) => onChange({ ...value, enabled })}
           trackColor={{ true: colors.primary, false: colors.border }}
         />
-        {!isSheet ? <Pressable onPress={handleRemove} hitSlop={8}>
+        {!isSheet || showRemoveInSheet ? <Pressable onPress={isSheet ? onRemove : handleRemove} hitSlop={8}>
           <Ionicons name="trash-outline" size={20} color={colors.danger} />
         </Pressable> : null}
       </View>

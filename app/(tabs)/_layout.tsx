@@ -1,6 +1,9 @@
+import { useEffect, useState, type ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View, type LayoutChangeEvent } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useThemeMode } from '../../src/theme/useThemeColors';
 
 const TAB_ITEMS = {
@@ -11,6 +14,7 @@ const TAB_ITEMS = {
 } as const;
 
 type TabName = keyof typeof TAB_ITEMS;
+type TabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
 
 const tabColors = {
   light: {
@@ -29,66 +33,133 @@ const tabColors = {
   },
 } as const;
 
-function TabLabel({ name, focused }: { name: TabName; focused: boolean }) {
+function AnimatedTabBar({ state, descriptors, navigation }: TabBarProps) {
   const mode = useThemeMode();
   const palette = tabColors[mode];
+  const insets = useSafeAreaInsets();
+  const [barWidth, setBarWidth] = useState(0);
+  const indicatorPosition = useSharedValue(state.index);
+  const itemWidth = barWidth / state.routes.length;
+
+  useEffect(() => {
+    indicatorPosition.value = withSpring(state.index, {
+      damping: 18,
+      mass: 0.65,
+      stiffness: 210,
+    });
+  }, [indicatorPosition, state.index]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: indicatorPosition.value * itemWidth }],
+  }));
+
+  function measureBar(event: LayoutChangeEvent) {
+    setBarWidth(event.nativeEvent.layout.width);
+  }
 
   return (
-    <View style={{ alignItems: 'center', gap: 5 }}>
-      <Text
-        style={{
-          color: focused ? palette.active : palette.inactive,
-          fontSize: 11,
-          fontWeight: focused ? '700' : '400',
-          lineHeight: 13,
-        }}
-      >
-        {TAB_ITEMS[name].label}
-      </Text>
-      <View
-        style={{
-          backgroundColor: focused ? palette.indicator : 'transparent',
-          borderCurve: 'continuous',
-          borderRadius: 999,
-          height: 2,
-          width: 16,
-        }}
-      />
+    <View
+      onLayout={measureBar}
+      style={{
+        backgroundColor: palette.background,
+        borderCurve: 'continuous',
+        borderTopColor: palette.border,
+        borderTopLeftRadius: 34,
+        borderTopRightRadius: 34,
+        borderTopWidth: 1,
+        flexDirection: 'row',
+        minHeight: 84,
+        overflow: 'hidden',
+        paddingBottom: Math.max(insets.bottom, 12),
+        paddingTop: 8,
+      }}
+    >
+      {barWidth > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              alignItems: 'center',
+              bottom: Math.max(insets.bottom, 12) - 2,
+              left: 0,
+              position: 'absolute',
+              width: itemWidth,
+            },
+            indicatorStyle,
+          ]}
+        >
+          <View
+            style={{
+              backgroundColor: palette.indicator,
+              borderCurve: 'continuous',
+              borderRadius: 999,
+              height: 2,
+              width: 16,
+            }}
+          />
+        </Animated.View>
+      ) : null}
+
+      {state.routes.map((route, index) => {
+        const name = route.name as TabName;
+        const item = TAB_ITEMS[name];
+        if (!item) return null;
+
+        const focused = state.index === index;
+        const options = descriptors[route.key].options;
+
+        return (
+          <Pressable
+            accessibilityLabel={options.tabBarAccessibilityLabel ?? item.label}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: focused }}
+            key={route.key}
+            onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+            onPress={() => {
+              const event = navigation.emit({
+                canPreventDefault: true,
+                target: route.key,
+                type: 'tabPress',
+              });
+
+              if (!focused && !event.defaultPrevented) {
+                navigation.navigate(route.name, route.params);
+              }
+            }}
+            style={({ pressed }) => ({
+              alignItems: 'center',
+              flex: 1,
+              gap: 5,
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+              paddingBottom: 7,
+            })}
+          >
+            <Ionicons color={focused ? palette.active : palette.inactive} name={item.icon} size={22} />
+            <Text
+              style={{
+                color: focused ? palette.active : palette.inactive,
+                fontSize: 11,
+                fontWeight: focused ? '700' : '400',
+                lineHeight: 13,
+              }}
+            >
+              {item.label}
+            </Text>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
-function TabIcon({ name, focused }: { name: TabName; focused: boolean }) {
-  const mode = useThemeMode();
-  const palette = tabColors[mode];
-
-  return <Ionicons color={focused ? palette.active : palette.inactive} name={TAB_ITEMS[name].icon} size={22} />;
-}
-
 export default function TabsLayout() {
-  const mode = useThemeMode();
-  const palette = tabColors[mode];
-
   return (
     <Tabs
+      tabBar={(props) => <AnimatedTabBar {...props} />}
       screenOptions={{
         headerShown: false,
         animation: 'fade',
-        tabBarActiveTintColor: palette.active,
-        tabBarInactiveTintColor: palette.inactive,
-        tabBarItemStyle: { paddingTop: 10 },
-        tabBarStyle: {
-          backgroundColor: palette.background,
-          borderCurve: 'continuous',
-          borderTopColor: palette.border,
-          borderTopLeftRadius: 34,
-          borderTopRightRadius: 34,
-          borderTopWidth: 1,
-          height: 96,
-          overflow: 'hidden',
-          paddingBottom: 12,
-          paddingTop: 2,
-        },
       }}
     >
       {(Object.keys(TAB_ITEMS) as TabName[]).map((name) => (
@@ -98,8 +169,6 @@ export default function TabsLayout() {
           options={{
             title: TAB_ITEMS[name].label,
             tabBarAccessibilityLabel: TAB_ITEMS[name].label,
-            tabBarIcon: ({ focused }) => <TabIcon focused={focused} name={name} />,
-            tabBarLabel: ({ focused }) => <TabLabel focused={focused} name={name} />,
           }}
         />
       ))}
