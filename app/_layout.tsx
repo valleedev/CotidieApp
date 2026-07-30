@@ -19,8 +19,6 @@ import { AnimatedSplash } from '../src/components/AnimatedSplash';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const SPLASH_MIN_DURATION_MS = 900;
-
 export default function RootLayout() {
   const session = use$(session$);
   const authReady = use$(authReady$);
@@ -66,15 +64,13 @@ export default function RootLayout() {
   }, []);
 
   const [splashDone, setSplashDone] = useState(false);
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinTimeElapsed(true), SPLASH_MIN_DURATION_MS);
-    SplashScreen.hideAsync();
-    return () => clearTimeout(timer);
+    // La capa AnimatedSplash ya quedó montada en el primer render. Ocultamos aquí el
+    // splash nativo (que ahora solo es color) para que el único splash visible sea
+    // nuestra animación, sin un fotograma en blanco entre ambos.
+    SplashScreen.hide();
   }, []);
-
-  const showApp = authReady && minTimeElapsed;
 
   return (
     <SafeAreaProvider>
@@ -105,7 +101,7 @@ export default function RootLayout() {
           </GestureHandlerRootView>
         )}
         {!splashDone && (
-          <AnimatedSplash visible={!showApp} onExitComplete={() => setSplashDone(true)} />
+          <AnimatedSplash visible={!authReady} onExitComplete={() => setSplashDone(true)} />
         )}
       </ThemeProvider>
     </SafeAreaProvider>

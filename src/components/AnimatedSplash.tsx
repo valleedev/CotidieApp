@@ -18,9 +18,9 @@ export interface AnimatedSplashProps {
   onExitComplete: () => void;
 }
 
-// Mismo tamaño/posición que el splash nativo (assets/splash-icon.png, imageWidth 200 en
-// app.json) — el mark se dibuja estático desde el primer frame, sin animar entrada, para que
-// el handoff nativo → custom sea invisible. Solo el glow y el texto entran animados.
+// Android necesita un recurso para el splash nativo, pero se genera a 1 px y resulta
+// imperceptible. Este mark se dibuja desde el primer frame para que la animación sea la
+// única pantalla de bienvenida apreciable. Solo el glow y el texto entran animados.
 const MARK_SIZE = 168;
 const RING_D = 'M 232.6,89.6 A 168,168 0 1 1 91.7,221.1';
 const FLAME_D =
@@ -68,7 +68,7 @@ export function AnimatedSplash({ visible, onExitComplete }: AnimatedSplashProps)
 
   useEffect(() => {
     if (!visible) {
-      overlayOpacity.value = withTiming(0, { duration: duration.slow, easing: easing.accelerate }, (finished) => {
+      overlayOpacity.value = withTiming(0, { duration: duration.normal, easing: easing.accelerate }, (finished) => {
         if (finished) runOnJS(onExitComplete)();
       });
     }

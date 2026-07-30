@@ -1,5 +1,6 @@
 import { Alert, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { Swipeable } from 'react-native-gesture-handler';
 import Animated, { FadeOutRight, LinearTransition } from 'react-native-reanimated';
@@ -7,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { use$ } from '@legendapp/state/react';
 import { useActiveHabits } from '../../src/hooks/useHabits';
 import { useProgress } from '../../src/hooks/useProgress';
-import { EmptyState } from '../../src/components/EmptyState';
+import { HabitEmptyState } from '../../src/components/HabitEmptyState';
 import { reorderHabits, softDeleteHabit } from '../../src/state/habits$';
 import { reminders$ } from '../../src/state/reminders$';
 import { formatDaysOfWeek } from '../../src/lib/format';
@@ -23,6 +24,8 @@ const screenColors = {
     subtle: '#AAA39A',
     action: '#211F1B',
     actionText: '#FBF8F3',
+    illustrationIcon: '#567957',
+    illustrationBorder: '#E7DED2',
     deleteBackground: '#F8E7DD',
     deleteText: '#B74B2B',
   },
@@ -34,6 +37,8 @@ const screenColors = {
     subtle: '#777267',
     action: '#F9F5EE',
     actionText: '#211F1B',
+    illustrationIcon: '#9DBD94',
+    illustrationBorder: '#3B382E',
     deleteBackground: '#4D2918',
     deleteText: '#EE8661',
   },
@@ -48,14 +53,18 @@ export default function HabitsScreen() {
 
   if (habits.length === 0) {
     return (
-      <View style={{ backgroundColor: colors.background, flex: 1 }}>
-        <EmptyState
-          logo
-          title="Crea tu primer hábito"
-          actionLabel="Crear hábito"
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }}>
+        <HabitEmptyState
+          actionLabel="Crear tu primer hábito"
+          colors={colors}
+          description={'Los cambios duraderos empiezan\npequeños. Crea tu primer hábito y hazle\nseguimiento día a día.'}
+          heading="Hábitos"
+          icon="leaf-outline"
           onAction={() => router.push('/habit/new')}
+          subtitle="Aún no has creado ninguno"
+          title="Empieza con uno solo"
         />
-      </View>
+      </SafeAreaView>
     );
   }
 

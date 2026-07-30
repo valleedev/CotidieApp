@@ -10,7 +10,7 @@ import { currentUserId } from '../../src/state/session$';
 import { isDone } from '../../src/domain/completion';
 import { todayLocalDateString } from '../../src/lib/dates';
 import { CircularProgress } from '../../src/components/CircularProgress';
-import { EmptyState } from '../../src/components/EmptyState';
+import { HabitEmptyState } from '../../src/components/HabitEmptyState';
 import { useThemeMode } from '../../src/theme/useThemeColors';
 
 const screenColors = {
@@ -25,6 +25,10 @@ const screenColors = {
     accentSoft: '#F1D5C5',
     complete: '#567957',
     progressTrack: '#E6DED4',
+    action: '#211F1B',
+    actionText: '#FBF8F3',
+    illustrationBorder: '#E7DED2',
+    illustrationIcon: '#567957',
   },
   dark: {
     background: '#1D1D16',
@@ -37,6 +41,10 @@ const screenColors = {
     accentSoft: '#6B3924',
     complete: '#A8C3A3',
     progressTrack: '#464238',
+    action: '#F9F5EE',
+    actionText: '#211F1B',
+    illustrationBorder: '#3B382E',
+    illustrationIcon: '#9DBD94',
   },
 } as const;
 
@@ -206,14 +214,23 @@ export default function TodayScreen() {
   const dateLabel = `${WEEKDAYS[now.getDay()]} ${now.getDate()} DE ${MONTHS[now.getMonth()]}`;
 
   if (totalActive === 0 || scheduledTotal === 0) {
+    const hasHabits = totalActive > 0;
+
     return (
       <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }}>
-        <EmptyState
-          logo
-          title="No tienes hábitos para hoy"
-          description="Agrega tu primer hábito para empezar a construir tu racha."
-          actionLabel="Agregar hábito"
+        <HabitEmptyState
+          actionLabel={hasHabits ? 'Crear otro hábito' : 'Crear tu primer hábito'}
+          colors={colors}
+          description={
+            hasHabits
+              ? 'Hoy no tienes nada programado.\nDisfruta la pausa o añade un hábito para hoy.'
+              : 'Los pequeños pasos de hoy se convierten\nen los cambios duraderos de mañana.'
+          }
+          heading="Hoy"
+          icon={hasHabits ? 'sunny-outline' : 'calendar-outline'}
           onAction={() => router.push('/habit/new')}
+          subtitle={dateLabel}
+          title={hasHabits ? 'Todo en calma por hoy' : 'Tu día empieza aquí'}
         />
       </SafeAreaView>
     );

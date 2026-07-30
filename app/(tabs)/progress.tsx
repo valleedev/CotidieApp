@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { use$ } from '@legendapp/state/react';
 import Animated, { FadeInDown, LinearTransition, runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useProgress } from '../../src/hooks/useProgress';
 import { settings$ } from '../../src/state/settings$';
 import { completions$ } from '../../src/state/completions$';
-import { EmptyState } from '../../src/components/EmptyState';
+import { HabitEmptyState } from '../../src/components/HabitEmptyState';
 import { overallConsistency } from '../../src/domain/streaks';
 import { weekOrder } from '../../src/domain/scheduling';
 import { weekdayLetter } from '../../src/lib/format';
@@ -26,6 +27,10 @@ const screenColors = {
     green: '#527652',
     greenSoft: '#A9C3A4',
     accent: '#BC4C29',
+    action: '#211F1B',
+    actionText: '#FBF8F3',
+    illustrationBorder: '#E7DED2',
+    illustrationIcon: '#567957',
   },
   dark: {
     background: '#1D1D16',
@@ -37,6 +42,10 @@ const screenColors = {
     green: '#A9C3A4',
     greenSoft: '#A9C3A4',
     accent: '#E78A5C',
+    action: '#F9F5EE',
+    actionText: '#211F1B',
+    illustrationBorder: '#3B382E',
+    illustrationIcon: '#9DBD94',
   },
 } as const;
 
@@ -79,9 +88,18 @@ export default function ProgressScreen() {
 
   if (entries.length === 0) {
     return (
-      <View style={{ backgroundColor: colors.background, flex: 1 }}>
-        <EmptyState logo title="Aún no tienes hábitos" actionLabel="Crear hábito" onAction={() => router.push('/habit/new')} />
-      </View>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }}>
+        <HabitEmptyState
+          actionLabel="Crear tu primer hábito"
+          colors={colors}
+          description={'Cada día que completas un hábito\nempieza a contar una historia de constancia.'}
+          heading="Progreso"
+          icon="analytics-outline"
+          onAction={() => router.push('/habit/new')}
+          subtitle="Aún no hay datos para mostrar"
+          title="Construye tu primera racha"
+        />
+      </SafeAreaView>
     );
   }
 

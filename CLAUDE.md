@@ -4,6 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 @AGENTS.md
 
+## ⚠️ REGLA CRÍTICA — prioridad máxima, siempre, sin excepción
+
+**Antes de CUALQUIER build nativo o comando que toque `android/`** (`gradlew assembleRelease`, `gradlew assembleDebug`, `expo run:android`, `expo prebuild`, `expo prebuild --clean`, etc.) verificar/asegurar que `android/gradle.properties` tenga:
+
+```properties
+org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+org.gradle.workers.max=3
+```
+
+`android/gradle.properties` está en `.gitignore` y se **regenera desde cero cada vez que corre `expo prebuild`** (con o sin `--clean` — confirmado: `expo prebuild` sin `--clean` también borra y recrea toda la carpeta `android/`). Esto significa que el límite se pierde silenciosamente cada vez y hay que volver a ponerlo — no asumir que persiste entre comandos. Chequear `free -h` antes de lanzar el build (RAM libre normal ~4-8GB de 14GB totales); si hay menos, bajar `workers.max` aún más.
+
+**Por qué es prioridad máxima:** ya pasó una vez — Gradle en paralelo por defecto (workers = nº de cores, 8 en esta máquina) más los daemons de Kotlin/Gradle saturó la RAM y congeló el sistema completo, obligando a apagarlo a la fuerza. Ver detalle completo en la sección "Generar el APK" más abajo.
+
 ## Estado del repositorio
 
 Fase 0 (Cimientos) completada: proyecto Expo (SDK 57, TypeScript, React 19.2.7) + Expo Router + estructura de carpetas + Legend-State v3 con persistencia local SQLite + scaffold local de Supabase (CLI init + migración inicial) + tokens de diseño básicos. Sin lógica de negocio real todavía (Fase 1+). No hay test runner configurado aún — se añade cuando `domain/` tenga su primera función real que testear.
