@@ -3,8 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "types": ["jest"],
+    "moduleSuffixes": ["", ".native", ".web"],
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "exclude": ["node_modules", "supabase/functions"]
 }

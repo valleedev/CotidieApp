@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,8 +9,9 @@ import { use$ } from '@legendapp/state/react';
 import '../src/notifications/handler';
 import { ensureNotificationChannelAsync } from '../src/notifications/channels';
 import { refreshPermissionStatusAsync } from '../src/notifications/permissions';
-import { startReconcileWatcher } from '../src/notifications/reconcile';
+import { startReconcileWatcher, startWebPushWatcher } from '../src/notifications/reconcile';
 import { startAdoptLocalDataWatcher } from '../src/lib/adoptLocalData';
+import { ensurePwaHeadTags } from '../src/lib/pwaHead';
 import { colors } from '../src/theme/tokens';
 import { useThemeMode } from '../src/theme/useThemeColors';
 import { supabase } from '../src/lib/supabase';
@@ -42,9 +43,11 @@ export default function RootLayout() {
   };
 
   useEffect(() => {
+    if (Platform.OS === 'web') ensurePwaHeadTags();
     ensureNotificationChannelAsync();
     refreshPermissionStatusAsync();
     const stopWatcher = startReconcileWatcher();
+    const stopWebPushWatcher = startWebPushWatcher();
     const stopAdoptWatcher = startAdoptLocalDataWatcher();
 
     const subscription = AppState.addEventListener('change', (state) => {
@@ -59,6 +62,7 @@ export default function RootLayout() {
     return () => {
       subscription.remove();
       stopWatcher();
+      stopWebPushWatcher();
       stopAdoptWatcher();
     };
   }, []);

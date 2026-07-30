@@ -1,7 +1,6 @@
 import { observable } from '@legendapp/state';
 import { syncedSupabase } from '@legendapp/state/sync-plugins/supabase';
-import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
-import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { localPersistPlugin } from '../lib/localPersist';
 import type { Completion, ID, ISODate } from '../domain/types';
 import { pickCompletionToUndo } from '../domain/completion';
 import { newId } from '../lib/uuid';
@@ -22,7 +21,7 @@ export const completions$ = observable<Record<string, Completion>>(
     initial: {},
     persist: {
       name: 'completions',
-      plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+      plugin: localPersistPlugin(),
     },
   })
 );

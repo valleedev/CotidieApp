@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { observe } from '@legendapp/state';
 import * as Notifications from 'expo-notifications';
 import { planReconcile, type OsScheduledEntry } from '../domain/reconcilePlan';
@@ -7,6 +8,7 @@ import { reminders$ } from '../state/reminders$';
 import { settings$ } from '../state/settings$';
 import { cancelNotifications, scheduleReminder } from './scheduler';
 import { removeLocalReminderSchedule, setLocalReminderSchedule } from './localSchedule';
+import { subscribeToPushAsync } from './webPush';
 
 function readData(request: Notifications.NotificationRequest): { reminderId: string | null; signature: string | null } {
   const data = request.content.data as { reminderId?: string; signature?: string } | undefined;
@@ -14,6 +16,10 @@ function readData(request: Notifications.NotificationRequest): { reminderId: str
 }
 
 export async function reconcile(): Promise<void> {
+  // En web la entrega es push remoto (ver webPush.ts/startWebPushWatcher) — no
+  // hay nada que agendar en el SO, y `getAllScheduledNotificationsAsync` no
+  // tiene implementación web (lanzaría en la primera línea de este try/catch).
+  if (Platform.OS === 'web') return;
   try {
     const permissionGranted = settings$.local.notificationPermissionStatus.get() === 'granted';
     const requests = await Notifications.getAllScheduledNotificationsAsync();
@@ -64,6 +70,23 @@ export function startReconcileWatcher(): () => void {
     if (scheduled) clearTimeout(scheduled);
     scheduled = setTimeout(() => {
       reconcile();
+    }, 300);
+  });
+}
+
+// Equivalente web de startReconcileWatcher(): no hay nada que agendar en el
+// SO, sólo asegurar que exista una suscripción push cuando el permiso está
+// concedido. subscribeToPushAsync() es idempotente (getSubscription() antes
+// de pedir una nueva).
+export function startWebPushWatcher(): () => void {
+  if (Platform.OS !== 'web') return () => {};
+  let scheduled: ReturnType<typeof setTimeout> | null = null;
+  return observe(() => {
+    const granted = settings$.local.notificationPermissionStatus.get() === 'granted';
+    if (scheduled) clearTimeout(scheduled);
+    if (!granted) return;
+    scheduled = setTimeout(() => {
+      subscribeToPushAsync();
     }, 300);
   });
 }

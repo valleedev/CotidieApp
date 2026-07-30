@@ -1,0 +1,11 @@
+{
+  "name": "Cotidie",
+  "short_name": "Cotidie",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FCF9F5",
+  "theme_color": "#FCF9F5",
+  "icons": [
+    { "src": "/icon.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

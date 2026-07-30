@@ -59,6 +59,30 @@ Antes de cualquier build nativo (`assembleRelease`, `assembleDebug`, `expo run:a
 - Crear proyecto real en supabase.com, luego `npx supabase login` + `npx supabase link --project-ref <ref>` + `npx supabase db push` para aplicar `supabase/migrations/0001_init.sql`.
 - Copiar `.env.example` → `.env` con `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` reales cuando se conecte Supabase (Fase 4).
 
+### Web Push (PWA en iPhone) — deploy manual
+
+Canal de notificaciones para la build web/PWA (Safari en iOS sólo permite Web Push remoto, nunca triggers locales — ver `src/notifications/webPush.ts` y `supabase/functions/send-reminder-push/`). Pasos únicos post-deploy, no automatizables desde aquí:
+
+1. `npx web-push generate-vapid-keys` → guardar el par.
+2. `EXPO_PUBLIC_VAPID_PUBLIC_KEY` (pública) en `.env`.
+3. `npx supabase functions deploy send-reminder-push`
+4. `npx supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:...`
+5. Habilitar `pg_cron`/`pg_net` (extensiones) y una única vez, en el SQL editor de Supabase:
+   ```sql
+   create extension if not exists pg_cron;
+   create extension if not exists pg_net;
+   select cron.schedule(
+     'send-reminder-push-every-minute', '* * * * *',
+     $$ select net.http_post(
+          url := '<PROJECT_URL>/functions/v1/send-reminder-push',
+          headers := jsonb_build_object('Authorization', 'Bearer <SERVICE_ROLE_KEY>')
+        ) $$
+   );
+   ```
+   (no vive en `supabase/migrations/` porque la URL/key son específicas de cada ambiente).
+6. `npx expo export --platform web` → deploy de `dist/` a hosting HTTPS (Web Push exige contexto seguro).
+7. En el iPhone: Safari → abrir la URL → Compartir → "Añadir a inicio" → abrir desde el ícono → Ajustes → permitir notificaciones.
+
 ### Nota de dependencias
 
 `react` está fijado a `19.2.7` (no `19.2.3`, la versión "esperada" por el SDK) porque las dependencias web de `expo-router` (`@expo/ui`, `vaul`, Radix) requieren `react-dom@^19.2.7` como peer; 19.2.3 no la satisface. Está excluido de `expo install --check` vía `expo.install.exclude` en `package.json` para que no se revierta solo. `@legendapp/state@beta` también requiere `--legacy-peer-deps` al instalar (su peer opcional `expo-sqlite@^15.0.0` usa el esquema de versionado antiguo de Expo, previo al alineado por SDK; el paquete real instalado es `expo-sqlite@~57.0.1` y funciona bien).

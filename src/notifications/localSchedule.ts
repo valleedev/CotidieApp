@@ -1,7 +1,6 @@
 import { observable } from '@legendapp/state';
 import { syncObservable } from '@legendapp/state/sync';
-import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
-import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { localPersistPlugin } from '../lib/localPersist';
 import type { ID, LocalReminderSchedule } from '../domain/types';
 
 // Puramente local: ids que devuelve expo-notifications EN ESTE dispositivo.
@@ -11,7 +10,7 @@ export const localSchedule$ = observable<Record<ID, LocalReminderSchedule>>({});
 syncObservable(localSchedule$, {
   persist: {
     name: 'local_reminder_schedules',
-    plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+    plugin: localPersistPlugin(),
   },
 });
 

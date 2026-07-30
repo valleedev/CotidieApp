@@ -1,7 +1,6 @@
 import { observable } from '@legendapp/state';
 import { syncedSupabase } from '@legendapp/state/sync-plugins/supabase';
-import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
-import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { localPersistPlugin } from '../lib/localPersist';
 import type { Habit, ID, Weekday } from '../domain/types';
 import { newId } from '../lib/uuid';
 import { nowIso } from '../lib/dates';
@@ -24,7 +23,7 @@ export const habits$ = observable<Record<string, Habit>>(
     fieldUpdatedAt: 'updated_at',
     transform: habitTransform,
     initial: {},
-    persist: { name: 'habits', plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')) },
+    persist: { name: 'habits', plugin: localPersistPlugin() },
   })
 );
 

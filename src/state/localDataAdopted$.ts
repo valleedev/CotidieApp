@@ -1,7 +1,6 @@
 import { observable } from '@legendapp/state';
 import { syncObservable } from '@legendapp/state/sync';
-import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
-import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { localPersistPlugin } from '../lib/localPersist';
 
 // NUNCA sincroniza a Supabase (solo local a este dispositivo). Marca si ya se
 // reasignaron los registros de LOCAL_USER_ID al usuario real tras el primer
@@ -12,6 +11,6 @@ export const localDataAdopted$ = observable(false);
 syncObservable(localDataAdopted$, {
   persist: {
     name: 'localDataAdopted',
-    plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+    plugin: localPersistPlugin(),
   },
 });

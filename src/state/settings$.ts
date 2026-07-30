@@ -1,7 +1,6 @@
 import { observable } from '@legendapp/state';
 import { synced, syncObservable } from '@legendapp/state/sync';
-import { observablePersistSqlite } from '@legendapp/state/persist-plugins/expo-sqlite';
-import { SQLiteStorage } from 'expo-sqlite/kv-store';
+import { localPersistPlugin } from '../lib/localPersist';
 import type { Settings } from '../domain/types';
 import { nowIso } from '../lib/dates';
 import { LOCAL_USER_ID } from '../lib/localUser';
@@ -71,7 +70,7 @@ export const settings$ = observable<SettingsState>({
     initial: defaultProfile as unknown as SettingsRow,
     persist: {
       name: 'settingsProfile',
-      plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+      plugin: localPersistPlugin(),
     },
   }),
   local: {
@@ -82,7 +81,7 @@ export const settings$ = observable<SettingsState>({
 syncObservable(settings$.local, {
   persist: {
     name: 'settingsLocal',
-    plugin: observablePersistSqlite(new SQLiteStorage('cotidie-local.db')),
+    plugin: localPersistPlugin(),
   },
 });
 

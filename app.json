@@ -21,7 +21,13 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "Cotidie",
+      "shortName": "Cotidie",
+      "themeColor": "#FCF9F5",
+      "backgroundColor": "#FCF9F5",
+      "display": "standalone",
+      "startUrl": "/"
     },
     "plugins": [
       "expo-router",

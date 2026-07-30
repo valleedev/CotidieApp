@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { use$ } from '@legendapp/state/react';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import {
   refreshPermissionStatusAsync,
   requestPermissionAsync,
 } from '../../src/notifications/permissions';
+import { isRunningAsStandalonePwa } from '../../src/notifications/webPush';
 import { useSyncSummary } from '../../src/hooks/useSyncSummary';
 import { formatRelativeShort } from '../../src/lib/dates';
 import { useThemeMode } from '../../src/theme/useThemeColors';
@@ -81,6 +82,7 @@ export default function SettingsScreen() {
   const syncTitle = sync.status === 'synced' ? 'Todo guardado' : sync.status === 'syncing' ? 'Guardando cambios' : sync.status === 'offline' ? 'Sin conexión' : 'No se pudo sincronizar';
   const syncSubtitle = sync.status === 'synced' ? `Sincronizado ${formatRelativeShort(sync.lastSync)}` : sync.status === 'syncing' ? 'Sincronizando…' : sync.status === 'offline' ? 'Los cambios se guardan en este dispositivo' : 'Revisaremos la conexión al volver a abrir';
   const notificationLabel = notificationStatus === 'granted' ? 'Permitidas' : notificationStatus === 'denied' ? 'Bloqueadas' : 'Pendiente';
+  const needsHomeScreenInstall = Platform.OS === 'web' && !isRunningAsStandalonePwa();
 
   useFocusEffect(
     useCallback(() => {
@@ -136,8 +138,14 @@ export default function SettingsScreen() {
 
         <View style={{ gap: 8 }}>
           <Text style={{ color: colors.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1.25 }}>RECORDATORIOS</Text>
+          {needsHomeScreenInstall ? (
+            <View style={{ backgroundColor: colors.syncBackground, borderRadius: 14, gap: 2, paddingHorizontal: 15, paddingVertical: 13 }}>
+              <Text style={{ color: colors.text, fontSize: 13, fontWeight: '700' }}>Añade Cotidie a tu pantalla de inicio</Text>
+              <Text style={{ color: colors.muted, fontSize: 11 }}>Safari solo permite notificaciones desde la app instalada (Compartir → Añadir a inicio).</Text>
+            </View>
+          ) : null}
           <View>
-            <Pressable accessibilityLabel="Configurar notificaciones" onPress={handleNotificationsPress} style={{ alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', gap: 14, minHeight: 82 }}>
+            <Pressable accessibilityLabel="Configurar notificaciones" disabled={needsHomeScreenInstall} onPress={handleNotificationsPress} style={{ alignItems: 'center', borderBottomColor: colors.border, borderBottomWidth: 1, flexDirection: 'row', gap: 14, minHeight: 82, opacity: needsHomeScreenInstall ? 0.5 : 1 }}>
               <Ionicons color={colors.muted} name="notifications-outline" size={19} />
               <View style={{ flex: 1, gap: 2 }}>
                 <Text style={{ color: colors.text, fontSize: 15 }}>Notificaciones</Text>
