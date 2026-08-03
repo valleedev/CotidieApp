@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,6 +10,26 @@ import { BrandMark } from '../../src/components/BrandMark';
 
 export default function Welcome() {
   const colors = useThemeColors();
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
+  async function handleGoogle() {
+    if (googleLoading) return;
+    setGoogleError(null);
+    setGoogleLoading(true);
+    try {
+      // Import diferido: el módulo nativo de Google Sign-In no existe en un
+      // dev client que no fue recompilado con el plugin — importarlo estático
+      // rompería esta pantalla entera (TurboModuleRegistry.getEnforcing lanza
+      // al cargar el módulo, no al llamarlo).
+      const { signInWithGoogle } = await import('../../src/lib/googleAuth');
+      await signInWithGoogle();
+    } catch (e) {
+      setGoogleError(e instanceof Error ? e.message : 'No se pudo iniciar sesión con Google.');
+    } finally {
+      setGoogleLoading(false);
+    }
+  }
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={[styles.container, { backgroundColor: colors.background }]}>
@@ -29,7 +50,10 @@ export default function Welcome() {
         </Text>
 
         <View style={styles.actions}>
-          <AuthActionRow icon="logo-google" label="Continuar con Google" />
+          <AuthActionRow icon="logo-google" label="Continuar con Google" onPress={handleGoogle} />
+          {googleError ? (
+            <Text style={[typography.caption, { color: colors.danger }]}>{googleError}</Text>
+          ) : null}
           <AuthActionRow icon="logo-apple" label="Continuar con Apple" />
 
           <View style={styles.divider}>

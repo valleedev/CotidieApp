@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 
 // TEMPORAL: bypass de auth para desarrollar sin loguearse. Poner en false (o
 // borrar este bloque) para volver al flujo real de Supabase Auth.
-const DEV_BYPASS_AUTH = true;
+const DEV_BYPASS_AUTH = false;
 const FAKE_SESSION = { user: { id: '00000000-0000-4000-8000-000000000001' } } as Session;
 
 export const session$ = observable<Session | null>(DEV_BYPASS_AUTH ? FAKE_SESSION : null);

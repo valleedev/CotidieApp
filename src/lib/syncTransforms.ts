@@ -1,5 +1,45 @@
-import { transformStringifyKeys } from '@legendapp/state/sync';
 import type { Habit, Completion, Reminder, Settings } from '../domain/types';
+
+type KeySpec<TRemote, TLocal> =
+  | (keyof TRemote & keyof TLocal & string)
+  | { from: keyof TRemote & string; to: keyof TLocal & string };
+
+// Rename-only snake_case <-> camelCase, sin parseo JSON: ninguna columna de
+// estas tablas es json/jsonb (son uuid/text/timestamptz/smallint[]), así que
+// `transformStringifyKeys` de legend-state rompe acá — hace JSON.parse a
+// ciegas sobre cualquier string recibido (id, user_id, updated_at, name...),
+// y revienta con "Unexpected character in number: -" apenas llega un UUID o
+// un timestamp por Realtime. PostgREST ya serializa smallint[] como array
+// JSON nativo, no hace falta stringify tampoco.
+function renameKeys<TRemote extends object, TLocal extends object>(
+  ...keys: KeySpec<TRemote, TLocal>[]
+) {
+  const pairs = keys.map((key) =>
+    typeof key === 'string' ? { from: key, to: key } : key
+  );
+  return {
+    load: (value: any) => {
+      for (const { from, to } of pairs) {
+        if (from in value) {
+          const v = value[from];
+          if ((to as string) !== (from as string)) delete value[from];
+          value[to] = v;
+        }
+      }
+      return value;
+    },
+    save: (value: any) => {
+      for (const { from, to } of pairs) {
+        if (to in value) {
+          const v = value[to];
+          if ((to as string) !== (from as string)) delete value[to];
+          value[from] = v;
+        }
+      }
+      return value;
+    },
+  };
+}
 
 interface HabitRow {
   id: string;
@@ -16,7 +56,7 @@ interface HabitRow {
   deleted_at: string | null;
 }
 
-export const habitTransform = transformStringifyKeys<HabitRow, Habit>(
+export const habitTransform = renameKeys<HabitRow, Habit>(
   { from: 'user_id', to: 'userId' },
   { from: 'days_of_week', to: 'daysOfWeek' },
   { from: 'target_per_day', to: 'targetPerDay' },
@@ -42,7 +82,7 @@ interface CompletionRow {
   deleted_at: string | null;
 }
 
-export const completionTransform = transformStringifyKeys<CompletionRow, Completion>(
+export const completionTransform = renameKeys<CompletionRow, Completion>(
   { from: 'habit_id', to: 'habitId' },
   { from: 'user_id', to: 'userId' },
   { from: 'completed_at', to: 'completedAt' },
@@ -64,7 +104,7 @@ interface ReminderRow {
   deleted_at: string | null;
 }
 
-export const reminderTransform = transformStringifyKeys<ReminderRow, Reminder>(
+export const reminderTransform = renameKeys<ReminderRow, Reminder>(
   { from: 'habit_id', to: 'habitId' },
   { from: 'user_id', to: 'userId' },
   { from: 'days_of_week', to: 'daysOfWeek' },
@@ -83,7 +123,7 @@ export interface SettingsRow {
   updated_at: string;
 }
 
-export const settingsTransform = transformStringifyKeys<SettingsRow, Settings>(
+export const settingsTransform = renameKeys<SettingsRow, Settings>(
   { from: 'user_id', to: 'userId' },
   { from: 'week_starts_on', to: 'weekStartsOn' },
   { from: 'display_name', to: 'displayName' },
