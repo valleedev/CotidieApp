@@ -5,13 +5,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { Easing, FadeIn, FadeInDown, FadeOutUp, LinearTransition, ZoomIn, interpolateColor, useAnimatedStyle, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useToday, type TodayHabitEntry } from '../../src/hooks/useToday';
+import { useDataReady } from '../../src/hooks/useDataReady';
 import { addCompletion, undoOneCompletion } from '../../src/state/completions$';
 import { currentUserId } from '../../src/state/session$';
 import { isDone } from '../../src/domain/completion';
 import { todayLocalDateString } from '../../src/lib/dates';
 import { CircularProgress } from '../../src/components/CircularProgress';
 import { HabitEmptyState } from '../../src/components/HabitEmptyState';
+import { AchievementToast } from '../../src/components/AchievementToast';
 import { useThemeMode } from '../../src/theme/useThemeColors';
+import { triggerCelebration } from '../../src/state/celebration$';
+import { playAchievementSound } from '../../src/lib/sound';
 
 const screenColors = {
   light: {
@@ -59,6 +63,8 @@ function toggle(entry: TodayHabitEntry) {
     undoOneCompletion(entry.habit.id, today, firstReminder?.id);
   } else {
     addCompletion(entry.habit.id, currentUserId()!, today, firstReminder?.id);
+    playAchievementSound();
+    triggerCelebration();
   }
 }
 
@@ -210,6 +216,7 @@ function TimelineRow({ entry, isLast }: { entry: TodayHabitEntry; isLast: boolea
 }
 
 export default function TodayScreen() {
+  const isReady = useDataReady();
   const { totalActive, pending, completed, entries } = useToday();
   const mode = useThemeMode();
   const colors = screenColors[mode];
@@ -221,6 +228,10 @@ export default function TodayScreen() {
   const featured = pending[0] ?? entries[0];
   const now = new Date();
   const dateLabel = `${WEEKDAYS[now.getDay()]} ${now.getDate()} DE ${MONTHS[now.getMonth()]}`;
+
+  if (!isReady) {
+    return <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }} />;
+  }
 
   if (totalActive === 0 || scheduledTotal === 0) {
     const hasHabits = totalActive > 0;
@@ -345,6 +356,7 @@ export default function TodayScreen() {
       >
         <Ionicons color={mode === 'dark' ? '#201E1A' : '#F8F4ED'} name="add" size={29} />
       </Pressable>
+      <AchievementToast />
     </SafeAreaView>
   );
 }

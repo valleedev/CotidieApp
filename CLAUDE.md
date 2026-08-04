@@ -58,6 +58,7 @@ Antes de cualquier build nativo (`assembleRelease`, `assembleDebug`, `expo run:a
 
 - Crear proyecto real en supabase.com, luego `npx supabase login` + `npx supabase link --project-ref <ref>` + `npx supabase db push` para aplicar `supabase/migrations/0001_init.sql`.
 - Copiar `.env.example` → `.env` con `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` reales cuando se conecte Supabase (Fase 4).
+- **Duración de sesión (cuánto tarda en pedir re-login) se configura en el Dashboard de Supabase, no en código.** `src/lib/supabase.ts` ya tiene `persistSession: true` + `autoRefreshToken: true` (correcto, no tocar). Si pide login más seguido de lo esperado: Dashboard → Authentication → Sessions → revisar "Time-box user sessions" e "Inactivity timeout" (suelen venir en default ~24h) y subirlos al valor deseado (ej. 30 días) o desactivarlos.
 
 ### Web Push (PWA en iPhone) — deploy manual
 

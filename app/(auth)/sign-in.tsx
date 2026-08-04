@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
+import { friendlyAuthErrorMessage } from '../../src/lib/authErrors';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, typography } from '../../src/theme/tokens';
 import { BrandMark } from '../../src/components/BrandMark';
@@ -23,7 +24,7 @@ export default function SignIn() {
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) {
-      setError(signInError.message);
+      setError(friendlyAuthErrorMessage(signInError));
     }
     // Éxito: session$ reacciona vía onAuthStateChange y Stack.Protected navega solo.
   }

@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react';
-import NetInfo from '@react-native-community/netinfo';
+import { use$ } from '@legendapp/state/react';
+import { isOnline$ } from '../state/network$';
 
 export function useNetworkStatus(): boolean {
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    return NetInfo.addEventListener((state) => {
-      setIsOnline(state.isConnected !== false && state.isInternetReachable !== false);
-    });
-  }, []);
-
-  return isOnline;
+  return use$(isOnline$);
 }

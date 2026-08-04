@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { friendlyAuthErrorMessage } from '../../src/lib/authErrors';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, typography } from '../../src/theme/tokens';
 import { AuthActionRow } from '../../src/components/AuthActionRow';
@@ -25,7 +26,7 @@ export default function Welcome() {
       const { signInWithGoogle } = await import('../../src/lib/googleAuth');
       await signInWithGoogle();
     } catch (e) {
-      setGoogleError(e instanceof Error ? e.message : 'No se pudo iniciar sesión con Google.');
+      setGoogleError(friendlyAuthErrorMessage(e));
     } finally {
       setGoogleLoading(false);
     }

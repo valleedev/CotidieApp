@@ -1,3 +1,4 @@
+import '../src/lib/logging';
 import { useEffect, useState } from 'react';
 import { AppState, Platform } from 'react-native';
 import { Stack, ThemeProvider, DarkTheme, DefaultTheme } from 'expo-router';
@@ -17,6 +18,7 @@ import { useThemeMode } from '../src/theme/useThemeColors';
 import { supabase } from '../src/lib/supabase';
 import { session$, authReady$ } from '../src/state/session$';
 import { AnimatedSplash } from '../src/components/AnimatedSplash';
+import { OfflineBanner } from '../src/components/OfflineBanner';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -104,6 +106,7 @@ export default function RootLayout() {
             </Stack>
           </GestureHandlerRootView>
         )}
+        {splashDone && <OfflineBanner />}
         {!splashDone && (
           <AnimatedSplash visible={!authReady} onExitComplete={() => setSplashDone(true)} />
         )}

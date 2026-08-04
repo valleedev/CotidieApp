@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
+import { friendlyAuthErrorMessage } from '../../src/lib/authErrors';
 import { useThemeColors } from '../../src/theme/useThemeColors';
 import { spacing, typography } from '../../src/theme/tokens';
 import { BrandMark } from '../../src/components/BrandMark';
@@ -24,7 +25,7 @@ export default function SignUp() {
     const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (signUpError) {
-      setError(signUpError.message);
+      setError(friendlyAuthErrorMessage(signUpError));
       return;
     }
     if (!data.session) {

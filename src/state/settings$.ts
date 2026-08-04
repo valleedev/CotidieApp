@@ -63,6 +63,10 @@ export const settings$ = observable<SettingsState>({
     },
     transform: settingsTransform,
     waitFor: isSyncEnabled$,
+    // Mantener en sync con el `retry` de src/lib/supabaseSync.ts — este
+    // observable usa synced() de bajo nivel (PK user_id), no pasa por
+    // configureSyncedSupabase(), así que necesita su propio `retry` explícito.
+    retry: { infinite: true, backoff: 'exponential', delay: 1000, maxDelay: 30000 },
     // El .d.ts de esta beta tipa `initial` como `SettingsRow` (el shape remoto),
     // pero en runtime (`sync.js`, activateSyncedNode) lo aplica crudo al nodo sin
     // pasar por `transform.load` — confirmado leyendo el fuente. El cast documenta

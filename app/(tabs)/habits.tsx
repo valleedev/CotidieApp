@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { use$ } from '@legendapp/state/react';
 import { useActiveHabits } from '../../src/hooks/useHabits';
 import { useProgress } from '../../src/hooks/useProgress';
+import { useDataReady } from '../../src/hooks/useDataReady';
 import { HabitEmptyState } from '../../src/components/HabitEmptyState';
 import { reorderHabits, softDeleteHabit } from '../../src/state/habits$';
 import { reminders$ } from '../../src/state/reminders$';
@@ -241,6 +242,7 @@ function DeleteAction({
 }
 
 export default function HabitsScreen() {
+  const isReady = useDataReady();
   const habits = useActiveHabits();
   const progress = useProgress();
   const reminders = Object.values(use$(reminders$));
@@ -260,6 +262,10 @@ export default function HabitsScreen() {
       return () => closeSwipeables();
     }, [closeSwipeables])
   );
+
+  if (!isReady) {
+    return <SafeAreaView edges={['top']} style={{ backgroundColor: colors.background, flex: 1 }} />;
+  }
 
   if (habits.length === 0) {
     return (
